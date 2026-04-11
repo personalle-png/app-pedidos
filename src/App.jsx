@@ -490,7 +490,7 @@ function ClientForm({ onSave, initialValues, onCancel, saving }) {
   );
 }
 
-function OrderForm({ onSave, initialValues, onCancel, clients, saving }) {
+function OrderForm({ onSave, initialValues, onCancel, clients, saving, nextPedido, isEditing }) {
   const [form, setForm] = useState(initialValues || emptyOrder);
 
   useEffect(() => {
@@ -526,13 +526,13 @@ function OrderForm({ onSave, initialValues, onCancel, clients, saving }) {
     <form onSubmit={handleSubmit} className="grid gap-4">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-2">
-  <Label>Número do pedido</Label>
-  <Input
-    value={editingOrder ? form.pedido : "Automático"}
-    readOnly
-    className="bg-slate-100 cursor-not-allowed"
-  />
-</div>
+          <Label>Número do pedido</Label>
+          <Input
+            value={isEditing ? form.pedido : "Automático"}
+            readOnly
+            className="bg-slate-100 cursor-not-allowed"
+          />
+        </div>
         <div className="grid gap-2">
           <Label>Cliente</Label>
           <Input
@@ -1223,12 +1223,14 @@ if (!editingOrder) {
         onClose={() => setOrderOpen(false)}
       >
         <OrderForm
-          onSave={saveOrder}
-          initialValues={editingOrder || emptyOrder}
-          onCancel={() => setOrderOpen(false)}
-          clients={clients}
-          saving={savingOrder}
-        />
+  onSave={saveOrder}
+  initialValues={editingOrder || emptyOrder}
+  onCancel={() => setOrderOpen(false)}
+  clients={clients}
+  saving={savingOrder}
+  nextPedido={nextPedido}
+  isEditing={!!editingOrder}
+/>
       </Modal>
 
       <Modal
