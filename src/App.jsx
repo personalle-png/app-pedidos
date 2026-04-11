@@ -283,6 +283,7 @@ function ClientForm({ onSave, initialValues, onCancel, saving }) {
 
   useEffect(() => {
     setForm(initialValues || emptyClient);
+    setForm(initialValues || emptyOrder);
     setCepError("");
     setCpfError("");
   }, [initialValues]);
