@@ -526,9 +526,13 @@ function OrderForm({ onSave, initialValues, onCancel, clients, saving }) {
     <form onSubmit={handleSubmit} className="grid gap-4">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-2">
-          <Label>Número do pedido</Label>
-          <Input value={form.pedido} onChange={(e) => updateField("pedido", e.target.value)} required />
-        </div>
+  <Label>Número do pedido</Label>
+  <Input
+    value={editingOrder ? form.pedido : "Automático"}
+    readOnly
+    className="bg-slate-100 cursor-not-allowed"
+  />
+</div>
         <div className="grid gap-2">
           <Label>Cliente</Label>
           <Input
@@ -672,22 +676,19 @@ export default function App() {
 
     try {
       const payload = {
-        ...formData,
-        dataPedido: formData.dataPedido || null,
-        referencia: formData.referencia || null,
-        dataFesta: formData.dataFesta || null,
-      };
+  ...formData,
+  dataPedido: formData.dataPedido || null,
+  referencia: formData.referencia || null,
+  dataFesta: formData.dataFesta || null,
+};
 
-      delete payload.id;
-      delete payload.created_at;
+delete payload.id;
+delete payload.created_at;
 
-      if (editingOrder) {
-        const { error } = await supabase.from("orders").update(payload).eq("id", editingOrder.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("orders").insert(payload);
-        if (error) throw error;
-      }
+// em novos pedidos, deixa o banco gerar o número
+if (!editingOrder) {
+  delete payload.pedido;
+}
 
       setOrderOpen(false);
       setEditingOrder(null);
