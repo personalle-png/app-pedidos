@@ -45,6 +45,7 @@ const emptyClient = {
   endereco: "",
   bairro: "",
   numero: "",
+  cpf: "",
   complemento: "",
   complementoEndereco: "",
   cidade: "",
@@ -75,6 +76,40 @@ function formatPhone(value) {
   if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
   if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+function formatCpf(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+}
+
+function isValidCpf(value) {
+  const cpf = String(value || "").replace(/\D/g, "");
+
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 9; i += 1) {
+    sum += Number(cpf[i]) * (10 - i);
+  }
+
+  let check1 = (sum * 10) % 11;
+  if (check1 === 10) check1 = 0;
+  if (check1 !== Number(cpf[9])) return false;
+
+  sum = 0;
+  for (let i = 0; i < 10; i += 1) {
+    sum += Number(cpf[i]) * (11 - i);
+  }
+
+  let check2 = (sum * 10) % 11;
+  if (check2 === 10) check2 = 0;
+
+  return check2 === Number(cpf[10]);
 }
 
 function normalizePhone(phone) {
@@ -243,57 +278,31 @@ function StatCard({ title, value, subtitle, icon: Icon }) {
 
 function ClientForm({ onSave, initialValues, onCancel, saving }) {
   const [form, setForm] = useState(initialValues || emptyClient);
-  const [cepLoading, setCepLoading] = useState(false);
-  const [cepError, setCepError] = useState("");
+  const [cpfError, setCpfError] = useState("");
 
   useEffect(() => {
     setForm(initialValues || emptyClient);
-    setCepError("");
+    setCpfError("");
   }, [initialValues]);
 
-  const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
-
-  const buscarCep = async () => {
-    const cepLimpo = String(form.cep || "").replace(/\D/g, "");
-
-    if (cepLimpo.length !== 8) {
-      setCepError("Digite um CEP válido.");
-      return;
-    }
-
-    try {
-      setCepLoading(true);
-      setCepError("");
-
-      const res = await fetch("https://viacep.com.br/ws/" + cepLimpo + "/json/");
-      const data = await res.json();
-
-      if (data.erro) {
-        setCepError("CEP não encontrado.");
-        return;
-      }
-
-      setForm((current) => ({
-  ...current,
-  cep: formatCep(cepLimpo),
-  endereco: data.logradouro || current.endereco,
-  bairro: data.bairro || current.bairro,
-  cidade: data.localidade || current.cidade,
-  estado: data.uf || current.estado,
-  complemento: current.complemento || data.complemento || "",
-  complementoEndereco: current.complementoEndereco || "",
-}));
-      
-    } catch {
-      setCepError("Erro ao buscar CEP.");
-    } finally {
-      setCepLoading(false);
-    }
-  };
+  const updateField = (field, value) =>
+    setForm((current) => ({ ...current, [field]: value }));
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({ ...form, telefone: formatPhone(form.telefone) });
+
+    if (!isValidCpf(form.cpf)) {
+      setCpfError("Digite um CPF válido.");
+      return;
+    }
+
+    setCpfError("");
+
+    onSave({
+      ...form,
+      telefone: formatPhone(form.telefone),
+      cpf: formatCpf(form.cpf),
+    });
   };
 
   return (
@@ -301,7 +310,11 @@ function ClientForm({ onSave, initialValues, onCancel, saving }) {
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label>Nome</Label>
-          <Input value={form.nome} onChange={(e) => updateField("nome", e.target.value)} required />
+          <Input
+            value={form.nome}
+            onChange={(e) => updateField("nome", e.target.value)}
+            required
+          />
         </div>
         <div className="grid gap-2">
           <Label>Telefone</Label>
@@ -314,71 +327,53 @@ function ClientForm({ onSave, initialValues, onCancel, saving }) {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
-        <div className="grid gap-2">
-          <Label>CEP</Label>
-          <Input
-            value={form.cep}
-            onChange={(e) => updateField("cep", formatCep(e.target.value))}
-            placeholder="00000-000"
-            maxLength={9}
-          />
-        </div>
-        <Button type="button" variant="outline" onClick={buscarCep} disabled={cepLoading}>
-          {cepLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Buscar CEP
-        </Button>
-      </div>
-
-      {cepError && <p className="text-sm text-red-600">{cepError}</p>}
-
       <div className="grid gap-2">
-        <Label>Endereço</Label>
-        <Input value={form.endereco} onChange={(e) => updateField("endereco", e.target.value)} />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="grid gap-2">
-          <Label>Bairro</Label>
-          <Input value={form.bairro} onChange={(e) => updateField("bairro", e.target.value)} />
-        </div>
-        <div className="grid gap-2">
-          <Label>Número</Label>
-          <Input value={form.numero} onChange={(e) => updateField("numero", e.target.value)} />
-        </div>
-         <div className="grid gap-2">
-    <Label>Complemento do endereço</Label>
-    <Input
-      value={form.complementoEndereco}
-      onChange={(e) => updateField("complementoEndereco", e.target.value)}
-      placeholder="Apto, bloco, sala..."
-    />
-  </div>
-        <div className="grid gap-2">
-          <Label>Complemento</Label>
-          <Input value={form.complemento} onChange={(e) => updateField("complemento", e.target.value)} />
-        </div>
+        <Label>CPF</Label>
+        <Input
+          value={form.cpf}
+          onChange={(e) => {
+            updateField("cpf", formatCpf(e.target.value));
+            if (cpfError) setCpfError("");
+          }}
+          placeholder="000.000.000-00"
+          maxLength={14}
+          required
+        />
+        {cpfError && <p className="text-sm text-red-600">{cpfError}</p>}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label>E-mail</Label>
-          <Input type="email" value={form.email} onChange={(e) => updateField("email", e.target.value)} />
+          <Input
+            type="email"
+            value={form.email}
+            onChange={(e) => updateField("email", e.target.value)}
+          />
         </div>
         <div className="grid gap-2">
           <Label>Cidade</Label>
-          <Input value={form.cidade} onChange={(e) => updateField("cidade", e.target.value)} />
+          <Input
+            value={form.cidade}
+            onChange={(e) => updateField("cidade", e.target.value)}
+          />
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label>Estado</Label>
-          <Input value={form.estado} onChange={(e) => updateField("estado", e.target.value)} />
+          <Input
+            value={form.estado}
+            onChange={(e) => updateField("estado", e.target.value)}
+          />
         </div>
         <div className="grid gap-2">
           <Label>Observações</Label>
-          <Textarea value={form.observacoes} onChange={(e) => updateField("observacoes", e.target.value)} />
+          <Textarea
+            value={form.observacoes}
+            onChange={(e) => updateField("observacoes", e.target.value)}
+          />
         </div>
       </div>
 
@@ -667,29 +662,12 @@ export default function App() {
     [orders, search, statusFilter, alertFilter]
   );
 
-  const filteredClients = useMemo(
-    () =>
-      clients.filter((client) => {
-        const text = [
-          client.nome,
-          client.cep,
-          client.endereco,
-          client.bairro,
-          client.numero,
-          client.complementoEndereco,
-          client.complemento,
-          client.cidade,
-          client.estado,
-          client.telefone,
-          client.email,
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        return text.includes(clientSearch.toLowerCase());
-      }),
-    [clients, clientSearch]
-  );
+const filteredClients = useMemo(() => clients.filter((client) => {
+  const text = [client.nome, client.cpf, client.cidade, client.estado, client.telefone, client.email]
+    .join(" ")
+    .toLowerCase();
+  return text.includes(clientSearch.toLowerCase());
+}), [clients, clientSearch]);
 
   const stats = useMemo(
     () => ({
