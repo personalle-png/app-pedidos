@@ -513,7 +513,7 @@ function OrderForm({ onSave, initialValues, onCancel, clients, saving, nextPedid
     e.preventDefault();
     onSave({
       ...form,
-      pedido: Number(form.pedido),
+      pedido: form.pedido ? Number(form.pedido) : undefined,
       qtd: Number(form.qtd || 0),
       prazoEntrega: Number(form.prazoEntrega || 0),
       dataPedido: form.dataPedido || null,
@@ -526,13 +526,13 @@ function OrderForm({ onSave, initialValues, onCancel, clients, saving, nextPedid
     <form onSubmit={handleSubmit} className="grid gap-4">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-2">
-          <Label>Número do pedido</Label>
-          <Input
-            value={isEditing ? form.pedido : "Automático"}
-            readOnly
-            className="bg-slate-100 cursor-not-allowed"
-          />
-        </div>
+  <Label>Número do pedido</Label>
+  <Input
+    value={initialValues?.id ? form.pedido : "Gerado automaticamente"}
+    readOnly
+    className="bg-slate-100 cursor-not-allowed"
+  />
+</div>
         <div className="grid gap-2">
           <Label>Cliente</Label>
           <Input
@@ -705,17 +705,20 @@ if (!editingOrder) {
     setError("");
 
     try {
-      const payload = { ...formData };
-      delete payload.id;
-      delete payload.created_at;
+      const payload = {
+  ...formData,
+  dataPedido: formData.dataPedido || null,
+  referencia: formData.referencia || null,
+  dataFesta: formData.dataFesta || null,
+};
 
-      if (editingClient) {
-        const { error } = await supabase.from("clients").update(payload).eq("id", editingClient.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("clients").insert(payload);
-        if (error) throw error;
-      }
+delete payload.id;
+delete payload.created_at;
+
+// 👉 deixa o banco gerar o número
+if (!editingOrder) {
+  delete payload.pedido;
+}
 
       setClientOpen(false);
       setEditingClient(null);
@@ -1224,7 +1227,7 @@ if (!editingOrder) {
       >
         <OrderForm
   onSave={saveOrder}
-  initialValues={editingOrder || emptyOrder}
+  setForm(initialValues || emptyOrder);
   onCancel={() => setOrderOpen(false)}
   clients={clients}
   saving={savingOrder}
