@@ -1133,6 +1133,7 @@ export default function App() {
                               <p className="text-sm text-slate-600">
                                 {client.endereco}
                                 {client.numero ? `, ${client.numero}` : ""}
+                                {client.complementoEndereco}
                               </p>
                             )}
                             {client.bairro && <p className="text-sm text-slate-600">Bairro: {client.bairro}</p>}
