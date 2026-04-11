@@ -46,6 +46,7 @@ const emptyClient = {
   bairro: "",
   numero: "",
   complemento: "",
+  complementoEndereco: "",
   cidade: "",
   estado: "",
   telefone: "",
@@ -273,14 +274,16 @@ function ClientForm({ onSave, initialValues, onCancel, saving }) {
       }
 
       setForm((current) => ({
-        ...current,
-        cep: formatCep(cepLimpo),
-        endereco: data.logradouro || current.endereco,
-        bairro: data.bairro || current.bairro,
-        cidade: data.localidade || current.cidade,
-        estado: data.uf || current.estado,
-        complemento: current.complemento || data.complemento || "",
-      }));
+  ...current,
+  cep: formatCep(cepLimpo),
+  endereco: data.logradouro || current.endereco,
+  bairro: data.bairro || current.bairro,
+  cidade: data.localidade || current.cidade,
+  estado: data.uf || current.estado,
+  complemento: current.complemento || data.complemento || "",
+  complementoEndereco: current.complementoEndereco || "",
+}));
+      
     } catch {
       setCepError("Erro ao buscar CEP.");
     } finally {
@@ -343,6 +346,14 @@ function ClientForm({ onSave, initialValues, onCancel, saving }) {
           <Label>Número</Label>
           <Input value={form.numero} onChange={(e) => updateField("numero", e.target.value)} />
         </div>
+         <div className="grid gap-2">
+    <Label>Complemento do endereço</Label>
+    <Input
+      value={form.complementoEndereco}
+      onChange={(e) => updateField("complementoEndereco", e.target.value)}
+      placeholder="Apto, bloco, sala..."
+    />
+  </div>
         <div className="grid gap-2">
           <Label>Complemento</Label>
           <Input value={form.complemento} onChange={(e) => updateField("complemento", e.target.value)} />
