@@ -51,6 +51,7 @@ const emptyClient = {
   telefone: "",
   email: "",
   observacoes: "",
+  cpf: ""
 };
 
 function cls(...parts) {
