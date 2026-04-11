@@ -676,6 +676,7 @@ export default function App() {
           client.endereco,
           client.bairro,
           client.numero,
+          client.complementoEndereco,
           client.complemento,
           client.cidade,
           client.estado,
@@ -1041,6 +1042,11 @@ export default function App() {
                               </p>
                             )}
                             {client.bairro && <p className="text-sm text-slate-600">Bairro: {client.bairro}</p>}
+                            {client.complementoEndereco && (
+  <p className="text-sm text-slate-600">
+    Complemento do endereço: {client.complementoEndereco}
+  </p>
+)}
                             {client.complemento && (
                               <p className="text-sm text-slate-600">Complemento: {client.complemento}</p>
                             )}
