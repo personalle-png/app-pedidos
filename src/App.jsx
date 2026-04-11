@@ -40,6 +40,11 @@ const emptyOrder = {
 
 const emptyClient = {
   nome: "",
+  cep: "",
+  endereco: "",
+  bairro: "",
+  numero: "",
+  complemento: "",
   cidade: "",
   estado: "",
   telefone: "",
@@ -54,6 +59,12 @@ function cls(...parts) {
 function formatDate(dateStr) {
   if (!dateStr) return "—";
   return new Date(`${dateStr}T12:00:00`).toLocaleDateString("pt-BR");
+}
+
+function formatCep(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 5) return digits;
+  return digits.slice(0, 5) + "-" + digits.slice(5);
 }
 
 function formatPhone(value) {
@@ -184,12 +195,52 @@ function SelectField({ value, onChange, options, placeholder }) {
 
 function ClientForm({ onSave, initialValues, onCancel, saving }) {
   const [form, setForm] = useState(initialValues || emptyClient);
+  const [cepLoading, setCepLoading] = useState(false);
+  const [cepError, setCepError] = useState("");
 
   useEffect(() => {
     setForm(initialValues || emptyClient);
+    setCepError("");
   }, [initialValues]);
 
-  const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
+  const updateField = (field, value) =>
+    setForm((current) => ({ ...current, [field]: value }));
+
+  const buscarCep = async () => {
+    const cepLimpo = String(form.cep || "").replace(/\D/g, "");
+
+    if (cepLimpo.length !== 8) {
+      setCepError("Digite um CEP válido.");
+      return;
+    }
+
+    try {
+      setCepLoading(true);
+      setCepError("");
+
+      const res = await fetch("https://viacep.com.br/ws/" + cepLimpo + "/json/");
+      const data = await res.json();
+
+      if (data.erro) {
+        setCepError("CEP não encontrado.");
+        return;
+      }
+
+      setForm((current) => ({
+        ...current,
+        cep: formatCep(cepLimpo),
+        endereco: data.logradouro || current.endereco,
+        bairro: data.bairro || current.bairro,
+        cidade: data.localidade || current.cidade,
+        estado: data.uf || current.estado,
+        complemento: current.complemento || data.complemento || "",
+      }));
+    } catch {
+      setCepError("Erro ao buscar CEP.");
+    } finally {
+      setCepLoading(false);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -199,25 +250,122 @@ function ClientForm({ onSave, initialValues, onCancel, saving }) {
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2"><Label>Nome</Label><Input value={form.nome} onChange={(e) => updateField("nome", e.target.value)} required /></div>
-        <div className="grid gap-2"><Label>Telefone</Label><Input value={form.telefone} onChange={(e) => updateField("telefone", formatPhone(e.target.value))} placeholder="(00) 00000-0000" maxLength={15} /></div>
+        <div className="grid gap-2">
+          <Label>Nome</Label>
+          <Input
+            value={form.nome}
+            onChange={(e) => updateField("nome", e.target.value)}
+            required
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label>Telefone</Label>
+          <Input
+            value={form.telefone}
+            onChange={(e) => updateField("telefone", formatPhone(e.target.value))}
+            placeholder="(00) 00000-0000"
+            maxLength={15}
+          />
+        </div>
       </div>
+
+      <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+        <div className="grid gap-2">
+          <Label>CEP</Label>
+          <Input
+            value={form.cep}
+            onChange={(e) => updateField("cep", formatCep(e.target.value))}
+            placeholder="00000-000"
+            maxLength={9}
+          />
+        </div>
+        <Button type="button" variant="outline" onClick={buscarCep} disabled={cepLoading}>
+          {cepLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Buscar CEP
+        </Button>
+      </div>
+
+      {cepError && <p className="text-sm text-red-600">{cepError}</p>}
+
+      <div className="grid gap-2">
+        <Label>Endereço</Label>
+        <Input
+          value={form.endereco}
+          onChange={(e) => updateField("endereco", e.target.value)}
+        />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-2">
+          <Label>Bairro</Label>
+          <Input
+            value={form.bairro}
+            onChange={(e) => updateField("bairro", e.target.value)}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label>Número</Label>
+          <Input
+            value={form.numero}
+            onChange={(e) => updateField("numero", e.target.value)}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label>Complemento</Label>
+          <Input
+            value={form.complemento}
+            onChange={(e) => updateField("complemento", e.target.value)}
+          />
+        </div>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2"><Label>E-mail</Label><Input type="email" value={form.email} onChange={(e) => updateField("email", e.target.value)} /></div>
-        <div className="grid gap-2"><Label>Cidade</Label><Input value={form.cidade} onChange={(e) => updateField("cidade", e.target.value)} /></div>
+        <div className="grid gap-2">
+          <Label>E-mail</Label>
+          <Input
+            type="email"
+            value={form.email}
+            onChange={(e) => updateField("email", e.target.value)}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label>Cidade</Label>
+          <Input
+            value={form.cidade}
+            onChange={(e) => updateField("cidade", e.target.value)}
+          />
+        </div>
       </div>
+
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2"><Label>Estado</Label><Input value={form.estado} onChange={(e) => updateField("estado", e.target.value)} /></div>
-        <div className="grid gap-2"><Label>Observações</Label><Textarea rows={4} value={form.observacoes} onChange={(e) => updateField("observacoes", e.target.value)} /></div>
+        <div className="grid gap-2">
+          <Label>Estado</Label>
+          <Input
+            value={form.estado}
+            onChange={(e) => updateField("estado", e.target.value)}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label>Observações</Label>
+          <Textarea
+            value={form.observacoes}
+            onChange={(e) => updateField("observacoes", e.target.value)}
+          />
+        </div>
       </div>
+
       <div className="flex gap-2 pt-2">
-        <Button type="submit" disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Salvar cliente</Button>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
+        <Button type="submit" disabled={saving}>
+          {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Salvar cliente
+        </Button>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancelar
+        </Button>
       </div>
     </form>
   );
 }
-
 function Label({ children }) {
   return <label className="text-sm font-medium text-slate-700">{children}</label>;
 }
