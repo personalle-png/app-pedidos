@@ -328,22 +328,17 @@ function ClientForm({ onSave, initialValues, onCancel, saving }) {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!isValidCpf(form.cpf)) {
-      setCpfError("Digite um CPF válido.");
-      return;
-    }
-
-    setCpfError("");
-
-    onSave({
-      ...form,
-      telefone: formatPhone(form.telefone),
-      cpf: formatCpf(form.cpf),
-      cep: formatCep(form.cep),
-    });
-  };
+  onSave({
+    ...form,
+    qtd: Number(form.qtd || 0),
+    prazoEntrega: Number(form.prazoEntrega || 0),
+    dataPedido: form.dataPedido || null,
+    referencia: form.referencia || null,
+    dataFesta: form.dataFesta || null,
+  });
+};
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
@@ -671,18 +666,55 @@ export default function App() {
     loadData();
   }, []);
 
-  const saveOrder = async (formData) => {
-    setSavingOrder(true);
-    setError("");
+ const saveOrder = async (formData) => {
+  setSavingOrder(true);
+  setError("");
 
-    try {
-      const payload = {
-  ...formData,
-  dataPedido: formData.dataPedido || null,
-  referencia: formData.referencia || null,
-  dataFesta: formData.dataFesta || null,
+  try {
+    const payload = {
+      cliente: formData.cliente,
+      item: formData.item,
+      qtd: Number(formData.qtd || 0),
+      situacao: formData.situacao,
+      cidade: formData.cidade,
+      estado: formData.estado,
+      dataPedido: formData.dataPedido || null,
+      referencia: formData.referencia || null,
+      dataFesta: formData.dataFesta || null,
+      observacoesPedido: formData.observacoesPedido || "",
+      observacoesInternas: formData.observacoesInternas || "",
+      prazoEntrega: Number(formData.prazoEntrega || 0),
+    };
+
+    if (editingOrder) {
+      const { error } = await supabase
+        .from("orders")
+        .update({
+          ...payload,
+          pedido: Number(formData.pedido),
+        })
+        .eq("id", editingOrder.id);
+
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from("orders")
+        .insert(payload);
+
+      if (error) throw error;
+    }
+
+    setOrderOpen(false);
+    setEditingOrder(null);
+    await loadData();
+  } catch (err) {
+    console.error("Erro ao salvar pedido:", err);
+    setError(err.message || "Erro ao salvar pedido.");
+  } finally {
+    setSavingOrder(false);
+  }
 };
-
+  
 delete payload.id;
 delete payload.created_at;
 
