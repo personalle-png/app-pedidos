@@ -332,59 +332,68 @@ export default function App() {
   }, []);
 
   const saveOrder = async (formData) => {
-    setSavingOrder(true);
-    setError("");
-    try {
-      const payload = {
-        ...formData,
-        dataPedido: formData.dataPedido || null,
-        referencia: formData.referencia || null,
-        dataFesta: formData.dataFesta || null,
-      };
-      delete payload.id;
-      delete payload.created_at;
+  setSavingOrder(true);
+  setError("");
+  try {
+    const payload = {
+      ...formData,
+      dataPedido: formData.dataPedido || null,
+      referencia: formData.referencia || null,
+      dataFesta: formData.dataFesta || null,
+    };
 
-      if (editingOrder) {
-        const { error } = await supabase.from("orders").update(payload).eq("id", editingOrder.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("orders").insert(payload);
-        if (error) throw error;
-      }
-      setOrderOpen(false);
-      setEditingOrder(null);
-      await loadData();
-    } catch (err) {
-      setError(err.message || "Erro ao salvar pedido.");
-    } finally {
-      setSavingOrder(false);
+    delete payload.id;
+    delete payload.created_at;
+
+    if (editingOrder) {
+      const { error } = await supabase
+        .from("orders")
+        .update(payload)
+        .eq("id", editingOrder.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from("orders").insert(payload);
+      if (error) throw error;
     }
-  };
 
-  const saveClient = async (formData) => {
-    setSavingClient(true);
-    setError("");
-    try {
-      const payload = { ...formData };
-      delete payload.id;
-      delete payload.created_at;
+    setOrderOpen(false);
+    setEditingOrder(null);
+    await loadData();
+  } catch (err) {
+    setError(err.message || "Erro ao salvar pedido.");
+  } finally {
+    setSavingOrder(false);
+  }
+};
 
-      if (editingClient) {
-        const { error } = await supabase.from("clients").update(payload).eq("id", editingClient.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("clients").insert(payload);
-        if (error) throw error;
-      }
-      setClientOpen(false);
-      setEditingClient(null);
-      await loadData();
-    } catch (err) {
-      setError(err.message || "Erro ao salvar cliente.");
-    } finally {
-      setSavingClient(false);
+ const saveClient = async (formData) => {
+  setSavingClient(true);
+  setError("");
+  try {
+    const payload = { ...formData };
+    delete payload.id;
+    delete payload.created_at;
+
+    if (editingClient) {
+      const { error } = await supabase
+        .from("clients")
+        .update(payload)
+        .eq("id", editingClient.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from("clients").insert(payload);
+      if (error) throw error;
     }
-  };
+
+    setClientOpen(false);
+    setEditingClient(null);
+    await loadData();
+  } catch (err) {
+    setError(err.message || "Erro ao salvar cliente.");
+  } finally {
+    setSavingClient(false);
+  }
+};
 
   const deleteOrder = async (id) => {
     try {
