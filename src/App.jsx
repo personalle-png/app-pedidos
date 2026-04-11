@@ -1227,12 +1227,10 @@ if (!editingOrder) {
       >
         <OrderForm
   onSave={saveOrder}
-  setForm(initialValues || emptyOrder);
+  initialValues={editingOrder || emptyOrder}
   onCancel={() => setOrderOpen(false)}
   clients={clients}
   saving={savingOrder}
-  nextPedido={nextPedido}
-  isEditing={!!editingOrder}
 />
       </Modal>
 
