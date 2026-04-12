@@ -3,6 +3,18 @@ import { emptyOrder } from '../../utils/orderHelpers.js';
 import { Button, Input, Label, SelectField, Textarea } from '../ui/Primitives.jsx';
 import { Loader2 } from 'lucide-react';
 
+const itemOptions = [
+  "Jogo da memória",
+  "Jogo de tabuleiro",
+  "Quebra-cabeça 12 peças P",
+  "Jogo da velha",
+  "Sacolinha",
+  "Jogo da velha MDF G",
+  "Jogo da velha MDF P",
+  "Jogo de tabuleiro com caixinha de papel",
+  "Jogo de tabuleiro MDF com caixa MDF",
+];
+
 export default function OrderForm({ onSave, initialValues, onCancel, clients, saving }) {
   const [form, setForm] = useState(initialValues || emptyOrder);
 
@@ -60,9 +72,14 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, sa
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-2">
-          <Label>Item</Label>
-          <Input value={form.item} onChange={(e) => updateField('item', e.target.value)} required />
-        </div>
+  <Label>Item</Label>
+  <SelectField
+    value={form.item}
+    onChange={(value) => updateField("item", value)}
+    options={itemOptions}
+    placeholder="Selecione um item"
+  />
+</div>
         <div className="grid gap-2">
           <Label>Quantidade</Label>
           <Input type="number" value={form.qtd} onChange={(e) => updateField('qtd', e.target.value)} required />
@@ -89,10 +106,8 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, sa
           <Label>Data do pedido</Label>
           <Input type="date" value={form.dataPedido} onChange={(e) => updateField('dataPedido', e.target.value)} />
         </div>
-        <div className="grid gap-2">
-          <Label>Referência</Label>
-          <Input type="date" value={form.referencia} onChange={(e) => updateField('referencia', e.target.value)} />
-        </div>
+        <Label>Data combinada</Label>
+<Input type="date" value={form.referencia} onChange={(e) => updateField("referencia", e.target.value)} />
         <div className="grid gap-2">
           <Label>Data da festa</Label>
           <Input type="date" value={form.dataFesta} onChange={(e) => updateField('dataFesta', e.target.value)} />
