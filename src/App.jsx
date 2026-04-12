@@ -29,6 +29,7 @@ export default function App() {
   const [tab, setTab] = useState('pedidos');
   const [themes, setThemes] = useState([]);
   const [settings, setSettings] = useState(null);
+  const [holidays, setHolidays] = useState([]);
   
   const saveThemeIfNeeded = async (tema) => {
   const nome = String(tema || "").trim();
@@ -54,11 +55,13 @@ export default function App() {
   { data: clientsData, error: clientsError },
   { data: themesData, error: themesError },
   { data: settingsData, error: settingsError },
+     { data: holidaysData, error: holidaysError },
 ] = await Promise.all([
   supabase.from("orders").select("*").order("pedido", { ascending: true }),
   supabase.from("clients").select("*").order("nome", { ascending: true }),
   supabase.from("themes").select("*").order("nome", { ascending: true }),
   supabase.from("settings").select("*").limit(1).single(),
+  supabase.from("holidays").select("*"),
 ]);
 
     if (ordersError) throw ordersError;
@@ -66,7 +69,9 @@ export default function App() {
     if (themesError) throw themesError;
     if (settingsError) throw settingsError;
       setSettings(settingsData || null);
-
+    if (holidaysError) throw holidaysError;
+      setHolidays(holidaysData || []);
+    
     setOrders(ordersData || []);
     setClients(clientsData || []);
     setThemes(themesData || []);
@@ -250,15 +255,16 @@ export default function App() {
       </div>
 
       <Modal open={orderOpen} title={editingOrder ? 'Editar pedido' : 'Novo pedido'} onClose={() => setOrderOpen(false)}>
-       <OrderForm
-  onSave={saveOrder}
-  initialValues={editingOrder || emptyOrder}
-  onCancel={() => setOrderOpen(false)}
-  clients={clients}
-  themes={themes}
-  settings={settings}
-  saving={savingOrder}
-/>
+         <OrderForm
+            onSave={saveOrder}
+            initialValues={editingOrder || emptyOrder}
+            onCancel={() => setOrderOpen(false)}
+            clients={clients}
+            themes={themes}
+            settings={settings}
+            saving={savingOrder}
+            holidays={holidays}
+        />
       </Modal>
 
       <Modal open={clientOpen} title={editingClient ? 'Editar cliente' : 'Novo cliente'} onClose={() => setClientOpen(false)}>
