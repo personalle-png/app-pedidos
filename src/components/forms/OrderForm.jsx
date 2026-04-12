@@ -52,13 +52,9 @@ const tipoEnvioOptions = [
   "RETIRADA",
 ];
 
-export default function OrderForm({ onSave, initialValues, onCancel, clients, themes, settings, saving }) {
+export default function OrderForm({ onSave, initialValues, onCancel, clients, themes, settings, holidays, saving })
   const [form, setForm] = useState(initialValues || emptyOrder);
-  const prazoCalculado = addBusinessDays(
-    form.dataPedido,
-    dias,
-    holidays
-  );
+  
   useEffect(() => {
     setForm(initialValues || emptyOrder);
   }, [initialValues]);
