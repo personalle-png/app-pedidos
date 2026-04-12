@@ -33,9 +33,9 @@ export default function ClientForm({ onSave, initialValues, onCancel, saving }) 
         setCepError('CEP não encontrado.');
         return;
       }
-      setForm((current) => ({
+      set((current) => ({
         ...current,
-        cep: formatCep(cepLimpo),
+        cep: atCep(cepLimpo),
         endereco: data.logradouro || current.endereco,
         bairro: data.bairro || current.bairro,
         cidade: data.localidade || current.cidade,
@@ -51,7 +51,7 @@ export default function ClientForm({ onSave, initialValues, onCancel, saving }) 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!isValidCpf(form.cpf)) {
+    if (!isValidCpf(.cpf)) {
       setCpfError('Digite um CPF válido.');
       return;
     }
@@ -66,86 +66,142 @@ export default function ClientForm({ onSave, initialValues, onCancel, saving }) 
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2">
-          <Label>Nome</Label>
-          <Input value={form.nome} onChange={(e) => updateField('nome', e.target.value)} required />
-        </div>
-        <div className="grid gap-2">
-          <Label>Telefone</Label>
-          <Input value={form.telefone} onChange={(e) => updateField('telefone', formatPhone(e.target.value))} placeholder="(00) 00000-0000" maxLength={15} />
-        </div>
-      </div>
 
-      <div className="grid gap-2">
-        <Label>CPF</Label>
-        <Input value={form.cpf} onChange={(e) => { updateField('cpf', formatCpf(e.target.value)); if (cpfError) setCpfError(''); }} placeholder="000.000.000-00" maxLength={14} required />
-        {cpfError && <p className="text-sm text-red-600">{cpfError}</p>}
-      </div>
+  {/* Nome */}
+  <div className="grid gap-2">
+    <Label>Nome</Label>
+    <Input
+      value={form.nome}
+      onChange={(e) => updateField("nome", e.target.value)}
+      required
+    />
+  </div>
 
-      <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
-        <div className="grid gap-2">
-          <Label>CEP</Label>
-          <Input value={form.cep} onChange={(e) => updateField('cep', formatCep(e.target.value))} placeholder="00000-000" maxLength={9} />
-        </div>
-        <Button type="button" variant="outline" onClick={buscarCep} disabled={cepLoading}>
-          {cepLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Buscar CEP
-        </Button>
-      </div>
+  {/* CPF */}
+  <div className="grid gap-2">
+    <Label>CPF</Label>
+    <Input
+      value={form.cpf}
+      onChange={(e) => {
+        updateField("cpf", formatCpf(e.target.value));
+        if (cpfError) setCpfError("");
+      }}
+      placeholder="000.000.000-00"
+      maxLength={14}
+      required
+    />
+    {cpfError && <p className="text-sm text-red-600">{cpfError}</p>}
+  </div>
 
-      {cepError && <p className="text-sm text-red-600">{cepError}</p>}
+  {/* Telefone + Email */}
+  <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-2">
+      <Label>Telefone</Label>
+      <Input
+        value={form.telefone}
+        onChange={(e) => updateField("telefone", formatPhone(e.target.value))}
+        placeholder="(00) 00000-0000"
+        maxLength={15}
+      />
+    </div>
 
-      <div className="grid gap-2">
-        <Label>Endereço</Label>
-        <Input value={form.endereco} onChange={(e) => updateField('endereco', e.target.value)} />
-      </div>
+    <div className="grid gap-2">
+      <Label>Email</Label>
+      <Input
+        type="email"
+        value={form.email}
+        onChange={(e) => updateField("email", e.target.value)}
+      />
+    </div>
+  </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="grid gap-2">
-          <Label>Bairro</Label>
-          <Input value={form.bairro} onChange={(e) => updateField('bairro', e.target.value)} />
-        </div>
-        <div className="grid gap-2">
-          <Label>Número</Label>
-          <Input value={form.numero} onChange={(e) => updateField('numero', e.target.value)} />
-        </div>
-        <div className="grid gap-2">
-          <Label>Complemento</Label>
-          <Input value={form.complemento} onChange={(e) => updateField('complemento', e.target.value)} />
-        </div>
-        <div className="grid gap-2">
-          <Label>Complemento do endereço</Label>
-          <Input value={form.complementoEndereco} onChange={(e) => updateField('complementoEndereco', e.target.value)} placeholder="Apto, bloco, sala..." />
-        </div>
-      </div>
+  {/* CEP + botão */}
+  <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+    <div className="grid gap-2">
+      <Label>CEP</Label>
+      <Input
+        value={form.cep}
+        onChange={(e) => updateField("cep", formatCep(e.target.value))}
+        placeholder="00000-000"
+        maxLength={9}
+      />
+    </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2">
-          <Label>E-mail</Label>
-          <Input type="email" value={form.email} onChange={(e) => updateField('email', e.target.value)} />
-        </div>
-        <div className="grid gap-2">
-          <Label>Cidade</Label>
-          <Input value={form.cidade} onChange={(e) => updateField('cidade', e.target.value)} />
-        </div>
-      </div>
+    <Button type="button" variant="outline" onClick={buscarCep} disabled={cepLoading}>
+      {cepLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      Buscar CEP
+    </Button>
+  </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2">
-          <Label>Estado</Label>
-          <Input value={form.estado} onChange={(e) => updateField('estado', e.target.value)} />
-        </div>
-        <div className="grid gap-2">
-          <Label>Observações</Label>
-          <Textarea value={form.observacoes} onChange={(e) => updateField('observacoes', e.target.value)} />
-        </div>
-      </div>
+  {cepError && <p className="text-sm text-red-600">{cepError}</p>}
 
-      <div className="flex gap-2 pt-2">
-        <Button type="submit" disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Salvar cliente</Button>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
-      </div>
-    </form>
+  {/* Rua */}
+  <div className="grid gap-2">
+    <Label>Rua</Label>
+    <Input
+      value={form.endereco}
+      onChange={(e) => updateField("endereco", e.target.value)}
+    />
+  </div>
+
+  {/* Complemento do CEP */}
+  <div className="grid gap-2">
+    <Label>Complemento do CEP</Label>
+    <Input
+      value={form.complemento}
+      onChange={(e) => updateField("complemento", e.target.value)}
+    />
+  </div>
+
+  {/* Bairro + Número */}
+  <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-2">
+      <Label>Bairro</Label>
+      <Input
+        value={form.bairro}
+        onChange={(e) => updateField("bairro", e.target.value)}
+      />
+    </div>
+
+    <div className="grid gap-2">
+      <Label>Número</Label>
+      <Input
+        value={form.numero}
+        onChange={(e) => updateField("numero", e.target.value)}
+      />
+    </div>
+  </div>
+
+  {/* Complemento do endereço */}
+  <div className="grid gap-2">
+    <Label>Complemento do endereço</Label>
+    <Input
+      value={form.complementoEndereco}
+      onChange={(e) => updateField("complementoEndereco", e.target.value)}
+      placeholder="Apto, bloco, sala..."
+    />
+  </div>
+
+  {/* Observações */}
+  <div className="grid gap-2">
+    <Label>Observações</Label>
+    <Textarea
+      value={form.observacoes}
+      onChange={(e) => updateField("observacoes", e.target.value)}
+    />
+  </div>
+
+  {/* Botões */}
+  <div className="flex gap-2 pt-2">
+    <Button type="submit" disabled={saving}>
+      {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      Salvar cliente
+    </Button>
+
+    <Button type="button" variant="outline" onClick={onCancel}>
+      Cancelar
+    </Button>
+  </div>
+</form>
   );
 }
