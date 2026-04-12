@@ -49,20 +49,23 @@ export default function ClientForm({ onSave, initialValues, onCancel, saving }) 
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!isValidCpf(.cpf)) {
-      setCpfError('Digite um CPF válido.');
-      return;
-    }
-    setCpfError('');
-    onSave({
-      ...form,
-      telefone: formatPhone(form.telefone),
-      cpf: formatCpf(form.cpf),
-      cep: formatCep(form.cep),
-    });
-  };
+ const handleSubmit = (e) => {
+  e.preventDefault();
+
+  if (!isValidCpf(form.cpf)) {
+    setCpfError("Digite um CPF válido.");
+    return;
+  }
+
+  setCpfError("");
+
+  onSave({
+    ...form,
+    telefone: formatPhone(form.telefone),
+    cpf: formatCpf(form.cpf),
+    cep: formatCep(form.cep),
+  });
+};
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
