@@ -34,6 +34,58 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   const [products, setProducts] = useState([]);
+  const [productOpen, setProductOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [savingProduct, setSavingProduct] = useState(false);
+
+  const saveProduct = async (formData) => {
+  setSavingProduct(true);
+  setError("");
+
+  try {
+    const payload = {
+      nome: String(formData.nome || "").trim(),
+      ativo: formData.ativo ?? true,
+    };
+
+    if (editingProduct) {
+      const { error } = await supabase
+        .from("products")
+        .update(payload)
+        .eq("id", editingProduct.id);
+
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from("products")
+        .insert(payload);
+
+      if (error) throw error;
+    }
+
+    setProductOpen(false);
+    setEditingProduct(null);
+    await loadData();
+  } catch (err) {
+    setError(err.message || "Erro ao salvar produto.");
+  } finally {
+    setSavingProduct(false);
+  }
+};
+  
+  const deleteProduct = async (id) => {
+  try {
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+    await loadData();
+  } catch (err) {
+    setError(err.message || "Erro ao excluir produto.");
+  }
+};
 
   const saveSettings = async (formData) => {
   setSavingSettings(true);
