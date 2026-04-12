@@ -63,6 +63,23 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, th
     setForm(initialValues || emptyOrder);
   }, [initialValues]);
 
+  useEffect(() => {
+  const dias = settings?.diasPadraoProducao;
+
+  if (form.dataPedido && dias) {
+    const prazoCalculado = addBusinessDays(
+      form.dataPedido,
+      dias,
+      holidays
+    );
+
+    setForm((current) => ({
+      ...current,
+      prazoEntrega: prazoCalculado,
+    }));
+  }
+}, [form.dataPedido, settings?.diasPadraoProducao, holidays]);
+
   const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
   const handleClientSelect = (name) => {
