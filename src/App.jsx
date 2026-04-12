@@ -152,8 +152,8 @@ export default function App() {
   supabase.from("clients").select("*").order("nome", { ascending: true }),
   supabase.from("themes").select("*").order("nome", { ascending: true }),
   supabase.from("settings").select("*").limit(1).single(),
-  supabase.from("products").select("*").eq("ativo", true).order("nome", { ascending: true }),
   supabase.from("holidays").select("*"),  
+  supabase.from("products").select("*").eq("ativo", true).order("nome", { ascending: true }),
 ]);
 
     if (ordersError) throw ordersError;
