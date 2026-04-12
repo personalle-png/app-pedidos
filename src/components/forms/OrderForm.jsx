@@ -25,7 +25,7 @@ const tipoEnvioOptions = [
   "RETIRADA",
 ];
 
-export default function OrderForm({ onSave, initialValues, onCancel, clients, saving }) {
+export default function OrderForm({ onSave, initialValues, onCancel, clients, themes, saving }) {
   const [form, setForm] = useState(initialValues || emptyOrder);
 
   useEffect(() => {
@@ -91,13 +91,19 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, sa
       />
     </div>
 <div className="grid gap-2">
-  <Label>Tema</Label>
-  <Input
-    value={form.tema}
-    onChange={(e) => updateField("tema", e.target.value)}
-    placeholder="Ex: Safari, Frozen, Dinossauro..."
-  />
-</div>
+    <Label>Tema</Label>
+    <Input
+      list="themes-list"
+      value={form.tema}
+      onChange={(e) => updateField("tema", e.target.value)}
+      placeholder="Digite ou selecione um tema"
+    />
+    <datalist id="themes-list">
+      {(themes || []).map((theme) => (
+        <option key={theme.id} value={theme.nome} />
+      ))}
+    </datalist>
+  </div>
     <div className="grid gap-2">
       <Label>Quantidade</Label>
       <Input
