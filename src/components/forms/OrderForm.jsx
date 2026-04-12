@@ -45,17 +45,18 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, sa
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave({
-      ...form,
-      pedido: form.pedido ? Number(form.pedido) : undefined,
-      qtd: Number(form.qtd || 0),
-      prazoEntrega: Number(form.prazoEntrega || 0),
-      dataPedido: form.dataPedido || null,
-      referencia: form.referencia || null,
-      dataFesta: form.dataFesta || null,
-    });
-  };
+  e.preventDefault();
+  onSave({
+    ...form,
+    pedido: form.pedido ? Number(form.pedido) : undefined,
+    qtd: Number(form.qtd || 0),
+    prazoTransporte: Number(form.prazoTransporte || 0),
+    dataPedido: form.dataPedido || null,
+    referencia: form.referencia || null,
+    dataFesta: form.dataFesta || null,
+    prazoEntrega: form.prazoEntrega || null,
+  });
+};
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
