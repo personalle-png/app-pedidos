@@ -140,16 +140,21 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, sa
   />
 </div>
       </div>
-
+<div className="grid gap-2">
+  <Label>Tipo de envio</Label>
+  <SelectField
+    value={form.tipoEnvio}
+    onChange={(value) => updateField("tipoEnvio", value)}
+    options={tipoEnvioOptions}
+    placeholder="Selecione o tipo de envio"
+  />
+</div>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label>Observações do pedido</Label>
           <Textarea value={form.observacoesPedido} onChange={(e) => updateField('observacoesPedido', e.target.value)} />
         </div>
-        <div className="grid gap-2">
-          <Label>Observações internas</Label>
-          <Textarea value={form.observacoesInternas} onChange={(e) => updateField('observacoesInternas', e.target.value)} />
-        </div>
+       
       </div>
 
       <div className="flex gap-2 pt-2">
