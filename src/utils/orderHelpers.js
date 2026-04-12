@@ -14,6 +14,7 @@ export const emptyOrder = {
   observacoesPedido: '',
   observacoesInternas: '',
   prazoEntrega: '',
+  prazoTransporte: "",
 };
 
 export const emptyClient = {
