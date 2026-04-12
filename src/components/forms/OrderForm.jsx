@@ -38,11 +38,24 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, sa
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2">
-          <Label>Cliente</Label>
-          <Input value={form.cliente} onChange={(e) => updateField('cliente', e.target.value)} required placeholder="Nome do cliente" />
-          {!!clients.length && <SelectField value="" onChange={handleClientSelect} options={clients.map((c) => c.nome)} placeholder="Selecionar cliente cadastrado" />}
-        </div>
+      <div className="grid gap-2">
+  <Label>Cliente</Label>
+  <Input
+    list="clientes-lista"
+    value={form.cliente}
+    onChange={(e) => {
+      updateField("cliente", e.target.value);
+      handleClientSelect(e.target.value);
+    }}
+    required
+    placeholder="Digite para pesquisar cliente"
+  />
+  <datalist id="clientes-lista">
+    {clients.map((client) => (
+      <option key={client.id} value={client.nome} />
+    ))}
+  </datalist>
+</div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
