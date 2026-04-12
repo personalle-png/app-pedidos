@@ -70,7 +70,9 @@ export default function App() {
         dataFesta: formData.dataFesta || null,
         observacoesPedido: formData.observacoesPedido || '',
         observacoesInternas: formData.observacoesInternas || '',
-        prazoEntrega: Number(formData.prazoEntrega || 0),
+        prazoEntrega: formData.prazoEntrega || null,
+        prazoTransporte: Number(formData.prazoTransporte || 0),
+        tipoEnvio: formData.tipoEnvio || "",
       };
 
       if (editingOrder) {
