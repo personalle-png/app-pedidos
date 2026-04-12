@@ -31,7 +31,6 @@ export default function App() {
   const [themes, setThemes] = useState([]);
   const [settings, setSettings] = useState(null);
   const [holidays, setHolidays] = useState([]);
-  const [settings, setSettings] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
 
