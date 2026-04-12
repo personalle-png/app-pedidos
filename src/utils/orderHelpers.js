@@ -16,6 +16,7 @@ export const emptyOrder = {
   prazoEntrega: '',
   prazoTransporte: "",
   tipoEnvio: "",
+  tema: "",
 };
 
 export const emptyClient = {
