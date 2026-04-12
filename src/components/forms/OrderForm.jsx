@@ -39,10 +39,6 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, sa
     <form onSubmit={handleSubmit} className="grid gap-4">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-2">
-          <Label>Número do pedido</Label>
-          <Input value={initialValues?.id ? form.pedido : 'Gerado automaticamente'} readOnly className="bg-slate-100 cursor-not-allowed" />
-        </div>
-        <div className="grid gap-2">
           <Label>Cliente</Label>
           <Input value={form.cliente} onChange={(e) => updateField('cliente', e.target.value)} required placeholder="Nome do cliente" />
           {!!clients.length && <SelectField value="" onChange={handleClientSelect} options={clients.map((c) => c.nome)} placeholder="Selecionar cliente cadastrado" />}
