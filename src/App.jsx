@@ -91,8 +91,7 @@ export default function App() {
   { data: clientsData, error: clientsError },
   { data: themesData, error: themesError },
   { data: settingsData, error: settingsError },
-     { data: holidaysData, error: holidaysError },
-     { data: settingsData, error: settingsError },
+  { data: holidaysData, error: holidaysError },    
 ] = await Promise.all([
   supabase.from("orders").select("*").order("pedido", { ascending: true }),
   supabase.from("clients").select("*").order("nome", { ascending: true }),
