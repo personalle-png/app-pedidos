@@ -15,6 +15,16 @@ const itemOptions = [
   "Jogo de tabuleiro MDF com caixa MDF",
 ];
 
+const tipoEnvioOptions = [
+  "JADLOG",
+  "CORREIOS REGULAR",
+  "CORREIOS EXPRESSO",
+  "BUSLOG",
+  "EXPRESSO SÃO MIGUEL",
+  "AZUL CARGO",
+  "RETIRADA",
+];
+
 export default function OrderForm({ onSave, initialValues, onCancel, clients, saving }) {
   const [form, setForm] = useState(initialValues || emptyOrder);
 
@@ -112,6 +122,15 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, sa
           <Label>Data da festa</Label>
           <Input type="date" value={form.dataFesta} onChange={(e) => updateField('dataFesta', e.target.value)} />
         </div>
+        <div className="grid gap-2">
+  <Label>Prazo de transporte (dias úteis)</Label>
+  <Input
+    type="number"
+    min="0"
+    value={form.prazoTransporte}
+    onChange={(e) => updateField("prazoTransporte", e.target.value)}
+  />
+</div>
        <div className="grid gap-2">
   <Label>Prazo de produção</Label>
   <Input
