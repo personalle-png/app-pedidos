@@ -11,6 +11,7 @@ import AgendaTab from './components/tabs/AgendaTab.jsx';
 import ClientesTab from './components/tabs/ClientesTab.jsx';
 import { daysUntil, emptyClient, emptyOrder } from './utils/orderHelpers.js';
 import SettingsForm from "./components/forms/SettingsForm.jsx";
+import ProductForm from "./components/forms/ProductForm.jsx";
 
 export default function App() {
   const [orders, setOrders] = useState([]);
@@ -395,6 +396,18 @@ export default function App() {
       <Modal open={clientOpen} title={editingClient ? 'Editar cliente' : 'Novo cliente'} onClose={() => setClientOpen(false)}>
         <ClientForm onSave={saveClient} initialValues={editingClient || emptyClient} onCancel={() => setClientOpen(false)} saving={savingClient} />
       </Modal>
+      <Modal
+  open={productOpen}
+  title={editingProduct ? "Editar produto" : "Novo produto"}
+  onClose={() => setProductOpen(false)}
+>
+  <ProductForm
+    onSave={saveProduct}
+    initialValues={editingProduct || { nome: "", ativo: true }}
+    onCancel={() => setProductOpen(false)}
+    saving={savingProduct}
+  />
+</Modal>
     </div>
   );
 }
