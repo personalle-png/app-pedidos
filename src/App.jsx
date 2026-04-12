@@ -256,6 +256,7 @@ export default function App() {
   onCancel={() => setOrderOpen(false)}
   clients={clients}
   themes={themes}
+  settings={settings}
   saving={savingOrder}
 />
       </Modal>
