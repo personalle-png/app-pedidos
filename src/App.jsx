@@ -35,17 +35,15 @@ export default function App() {
 
    const saveThemeIfNeeded = async (tema) => {
   const nome = String(tema || "").trim();
+
   if (!nome) return;
 
   const { error } = await supabase
     .from("themes")
-    .insert({ nome });
+    .upsert({ nome }, { onConflict: "nome" });
 
-  if (error && !String(error.message).toLowerCase().includes("duplicate")) {
-    throw error;
-  }
+  if (error) throw error;
 };
-
   try {
     const [
       { data: ordersData, error: ordersError },
