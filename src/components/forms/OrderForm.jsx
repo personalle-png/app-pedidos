@@ -194,20 +194,7 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, th
       <Input type="date" value={form.dataFesta} onChange={(e) => updateField("dataFesta", e.target.value)} />
     </div>
   </div>
-      <div className="grid gap-2">
-  <Label>Prazo de produção padrão</Label>
-  <Input
-    value={
-      settings?.diasPadraoProducao !== undefined &&
-      settings?.diasPadraoProducao !== null
-        ? `${settings.diasPadraoProducao} dia(s) útil(eis)`
-        : "Não configurado"
-    }
-    readOnly
-    className="bg-slate-100 cursor-not-allowed"
-  />
-</div>
-
+      
   <div className="grid gap-4 md:grid-cols-3">
     <div className="grid gap-2">
       <Label>Prazo de produção</Label>
