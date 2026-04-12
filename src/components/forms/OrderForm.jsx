@@ -59,108 +59,133 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, sa
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
-      <div className="grid gap-4 md:grid-cols-2">
-      <div className="grid gap-2">
-  <Label>Cliente</Label>
-  <Input
-    list="clientes-lista"
-    value={form.cliente}
-    onChange={(e) => {
-      updateField("cliente", e.target.value);
-      handleClientSelect(e.target.value);
-    }}
-    required
-    placeholder="Digite para pesquisar cliente"
-  />
-  <datalist id="clientes-lista">
-    {clients.map((client) => (
-      <option key={client.id} value={client.nome} />
-    ))}
-  </datalist>
-</div>
-      </div>
+  <div className="grid gap-2">
+    <Label>Cliente</Label>
+    <Input
+      list="clientes-lista"
+      value={form.cliente}
+      onChange={(e) => {
+        updateField("cliente", e.target.value);
+        handleClientSelect(e.target.value);
+      }}
+      required
+      placeholder="Digite para pesquisar cliente"
+    />
+    <datalist id="clientes-lista">
+      {clients.map((client) => (
+        <option key={client.id} value={client.nome} />
+      ))}
+    </datalist>
+  </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2">
-  <Label>Item</Label>
-  <SelectField
-    value={form.item}
-    onChange={(value) => updateField("item", value)}
-    options={itemOptions}
-    placeholder="Selecione um item"
-  />
-</div>
-        <div className="grid gap-2">
-          <Label>Quantidade</Label>
-          <Input type="number" value={form.qtd} onChange={(e) => updateField('qtd', e.target.value)} required />
-        </div>
-      </div>
+  <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-2">
+      <Label>Item</Label>
+      <SelectField
+        value={form.item}
+        onChange={(value) => updateField("item", value)}
+        options={itemOptions}
+        placeholder="Selecione um item"
+      />
+    </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="grid gap-2">
-          <Label>Situação</Label>
-          <SelectField value={form.situacao} onChange={(value) => updateField('situacao', value)} options={['Em Aberto', 'Em Andamento', 'Arte enviada', 'Finalizado']} />
-        </div>
-        <div className="grid gap-2">
-          <Label>Cidade</Label>
-          <Input value={form.cidade} onChange={(e) => updateField('cidade', e.target.value)} />
-        </div>
-        <div className="grid gap-2">
-          <Label>Estado</Label>
-          <Input value={form.estado} onChange={(e) => updateField('estado', e.target.value)} />
-        </div>
-      </div>
+    <div className="grid gap-2">
+      <Label>Quantidade</Label>
+      <Input
+        type="number"
+        value={form.qtd}
+        onChange={(e) => updateField("qtd", e.target.value)}
+        required
+      />
+    </div>
+  </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className="grid gap-2">
-          <Label>Data do pedido</Label>
-          <Input type="date" value={form.dataPedido} onChange={(e) => updateField('dataPedido', e.target.value)} />
-        </div>
-        <Label>Data combinada</Label>
-<Input type="date" value={form.referencia} onChange={(e) => updateField("referencia", e.target.value)} />
-        <div className="grid gap-2">
-          <Label>Data da festa</Label>
-          <Input type="date" value={form.dataFesta} onChange={(e) => updateField('dataFesta', e.target.value)} />
-        </div>
-        <div className="grid gap-2">
-  <Label>Prazo de transporte (dias úteis)</Label>
-  <Input
-    type="number"
-    min="0"
-    value={form.prazoTransporte}
-    onChange={(e) => updateField("prazoTransporte", e.target.value)}
-  />
-</div>
-       <div className="grid gap-2">
-  <Label>Prazo de produção</Label>
-  <Input
-    type="date"
-    value={form.prazoEntrega}
-    onChange={(e) => updateField("prazoEntrega", e.target.value)}
-  />
-</div>
-      </div>
-<div className="grid gap-2">
-  <Label>Tipo de envio</Label>
-  <SelectField
-    value={form.tipoEnvio}
-    onChange={(value) => updateField("tipoEnvio", value)}
-    options={tipoEnvioOptions}
-    placeholder="Selecione o tipo de envio"
-  />
-</div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2">
-          <Label>Observações do pedido</Label>
-          <Textarea value={form.observacoesPedido} onChange={(e) => updateField('observacoesPedido', e.target.value)} />
-        </div>
-       
-      </div>
+  <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-2">
+      <Label>Situação</Label>
+      <SelectField
+        value={form.situacao}
+        onChange={(value) => updateField("situacao", value)}
+        options={["Em Aberto", "Em Andamento", "Arte enviada", "Finalizado"]}
+      />
+    </div>
 
-      <div className="flex gap-2 pt-2">
-        <Button type="submit" disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Salvar pedido</Button>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
-      </div>
-    </form>
+    <div className="grid gap-2">
+      <Label>Cidade</Label>
+      <Input value={form.cidade} onChange={(e) => updateField("cidade", e.target.value)} />
+    </div>
+
+    <div className="grid gap-2">
+      <Label>Estado</Label>
+      <Input value={form.estado} onChange={(e) => updateField("estado", e.target.value)} />
+    </div>
+  </div>
+
+  <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-2">
+      <Label>Data do pedido</Label>
+      <Input type="date" value={form.dataPedido} onChange={(e) => updateField("dataPedido", e.target.value)} />
+    </div>
+
+    <div className="grid gap-2">
+      <Label>Data combinada</Label>
+      <Input type="date" value={form.referencia} onChange={(e) => updateField("referencia", e.target.value)} />
+    </div>
+
+    <div className="grid gap-2">
+      <Label>Data da festa</Label>
+      <Input type="date" value={form.dataFesta} onChange={(e) => updateField("dataFesta", e.target.value)} />
+    </div>
+  </div>
+
+  <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-2">
+      <Label>Prazo de produção</Label>
+      <Input
+        type="date"
+        value={form.prazoEntrega}
+        onChange={(e) => updateField("prazoEntrega", e.target.value)}
+      />
+    </div>
+
+    <div className="grid gap-2">
+      <Label>Prazo de transporte (dias úteis)</Label>
+      <Input
+        type="number"
+        min="0"
+        value={form.prazoTransporte}
+        onChange={(e) => updateField("prazoTransporte", e.target.value)}
+      />
+    </div>
+
+    <div className="grid gap-2">
+      <Label>Tipo de envio</Label>
+      <SelectField
+        value={form.tipoEnvio}
+        onChange={(value) => updateField("tipoEnvio", value)}
+        options={tipoEnvioOptions}
+        placeholder="Selecione o tipo de envio"
+      />
+    </div>
+  </div>
+
+  <div className="grid gap-2">
+    <Label>Observações do pedido</Label>
+    <Textarea
+      value={form.observacoesPedido}
+      onChange={(e) => updateField("observacoesPedido", e.target.value)}
+    />
+  </div>
+
+  <div className="flex gap-2 pt-2">
+    <Button type="submit" disabled={saving}>
+      {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      Salvar pedido
+    </Button>
+    <Button type="button" variant="outline" onClick={onCancel}>
+      Cancelar
+    </Button>
+  </div>
+</form>
   );
 }
