@@ -89,7 +89,14 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, sa
         placeholder="Selecione um item"
       />
     </div>
-
+<div className="grid gap-2">
+  <Label>Tema</Label>
+  <Input
+    value={form.tema}
+    onChange={(e) => updateField("tema", e.target.value)}
+    placeholder="Ex: Safari, Frozen, Dinossauro..."
+  />
+</div>
     <div className="grid gap-2">
       <Label>Quantidade</Label>
       <Input
