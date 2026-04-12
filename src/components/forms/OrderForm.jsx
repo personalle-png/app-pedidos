@@ -55,6 +55,7 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, sa
     referencia: form.referencia || null,
     dataFesta: form.dataFesta || null,
     prazoEntrega: form.prazoEntrega || null,
+    tema: form.tema || "",
   });
 };
 
