@@ -32,12 +32,14 @@ export default function App() {
   
   const saveThemeIfNeeded = async (tema) => {
   const nome = String(tema || "").trim();
-
   if (!nome) return;
+
+  const nomePadronizado =
+    nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase();
 
   const { error } = await supabase
     .from("themes")
-    .upsert({ nome }, { onConflict: "nome" });
+    .upsert({ nome: nomePadronizado }, { onConflict: "nome" });
 
   if (error) throw error;
 };
