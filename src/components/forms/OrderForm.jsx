@@ -30,18 +30,6 @@ function addBusinessDays(dateString, businessDays, holidays = []) {
   return date.toISOString().slice(0, 10);
 }
 
-const itemOptions = [
-  "Jogo da memória",
-  "Jogo de tabuleiro",
-  "Quebra-cabeça 12 peças P",
-  "Jogo da velha",
-  "Sacolinha",
-  "Jogo da velha MDF G",
-  "Jogo da velha MDF P",
-  "Jogo de tabuleiro com caixinha de papel",
-  "Jogo de tabuleiro MDF com caixa MDF",
-];
-
 const tipoEnvioOptions = [
   "JADLOG",
   "CORREIOS REGULAR",
@@ -52,7 +40,7 @@ const tipoEnvioOptions = [
   "RETIRADA",
 ];
 
-export default function OrderForm({ onSave, initialValues, onCancel, clients, themes, settings, holidays, saving }){
+export default function OrderForm({ onSave, initialValues, onCancel, clients, themes, settings, holidays, products, saving }){
   const [form, setForm] = useState(initialValues || emptyOrder);
   
   useEffect(() => {
@@ -124,14 +112,17 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, th
 
   <div className="grid gap-4 md:grid-cols-2">
     <div className="grid gap-2">
-      <Label>Item</Label>
-      <SelectField
-        value={form.item}
-        onChange={(value) => updateField("item", value)}
-        options={itemOptions}
-        placeholder="Selecione um item"
-      />
-    </div>
+  <Label>Item</Label>
+  <SelectField
+    value={form.item}
+    onChange={(value) => updateField("item", value)}
+    options={(products || []).map((product) => ({
+      value: product.nome,
+      label: product.nome,
+    }))}
+    placeholder="Selecione um produto"
+  />
+</div>
 <div className="grid gap-2">
     <Label>Tema</Label>
     <Input
