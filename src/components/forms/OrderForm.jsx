@@ -311,6 +311,7 @@ export default function OrderForm({
           Cancelar
         </Button>
       </div>
+      console.log("products", products);
     </form>
   );
 }
