@@ -28,7 +28,7 @@ export default function App() {
   const [error, setError] = useState('');
   const [tab, setTab] = useState('pedidos');
   const [themes, setThemes] = useState([]);
-
+  const [settings, setSettings] = useState(null);
   
   const saveThemeIfNeeded = async (tema) => {
   const nome = String(tema || "").trim();
@@ -49,19 +49,23 @@ export default function App() {
   setLoading(true);
   setError(""); 
   try {
-    const [
-      { data: ordersData, error: ordersError },
-      { data: clientsData, error: clientsError },
-      { data: themesData, error: themesError },
-    ] = await Promise.all([
-      supabase.from("orders").select("*").order("pedido", { ascending: true }),
-      supabase.from("clients").select("*").order("nome", { ascending: true }),
-      supabase.from("themes").select("*").order("nome", { ascending: true }),
-    ]);
+   const [
+  { data: ordersData, error: ordersError },
+  { data: clientsData, error: clientsError },
+  { data: themesData, error: themesError },
+  { data: settingsData, error: settingsError },
+] = await Promise.all([
+  supabase.from("orders").select("*").order("pedido", { ascending: true }),
+  supabase.from("clients").select("*").order("nome", { ascending: true }),
+  supabase.from("themes").select("*").order("nome", { ascending: true }),
+  supabase.from("settings").select("*").limit(1).single(),
+]);
 
     if (ordersError) throw ordersError;
     if (clientsError) throw clientsError;
     if (themesError) throw themesError;
+    if (settingsError) throw settingsError;
+      setSettings(settingsData || null);
 
     setOrders(ordersData || []);
     setClients(clientsData || []);
