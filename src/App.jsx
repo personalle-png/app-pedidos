@@ -5,7 +5,7 @@ import { Card, Button } from './components/ui/Primitives.jsx';
 import Modal from './components/layout/Modal.jsx';
 import StatCard from './components/common/StatCard.jsx';
 import ClientForm from './components/forms/ClientForm.jsx';
-import OrderForm from './components/forms/OrderForm.jsx';Lpr
+import OrderForm from './components/forms/OrderForm.jsx';
 import PedidosTab from './components/tabs/PedidosTab.jsx';
 import AgendaTab from './components/tabs/AgendaTab.jsx';
 import ClientesTab from './components/tabs/ClientesTab.jsx';
