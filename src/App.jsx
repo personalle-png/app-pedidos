@@ -29,11 +29,8 @@ export default function App() {
   const [tab, setTab] = useState('pedidos');
   const [themes, setThemes] = useState([]);
 
-  const loadData = async () => {
-  setLoading(true);
-  setError("");
-
-   const saveThemeIfNeeded = async (tema) => {
+  
+  const saveThemeIfNeeded = async (tema) => {
   const nome = String(tema || "").trim();
 
   if (!nome) return;
@@ -44,6 +41,11 @@ export default function App() {
 
   if (error) throw error;
 };
+  
+
+  const loadData = async () => {
+  setLoading(true);
+  setError(""); 
   try {
     const [
       { data: ordersData, error: ordersError },
