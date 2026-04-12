@@ -64,12 +64,10 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, th
   }, [initialValues]);
 
   useEffect(() => {
-  const dias = settings?.diasPadraoProducao;
-
-  if (form.dataPedido && dias) {
+  if (form.dataPedido && settings?.diasPadraoProducao) {
     const prazoCalculado = addBusinessDays(
       form.dataPedido,
-      dias,
+      settings.diasPadraoProducao,
       holidays
     );
 
