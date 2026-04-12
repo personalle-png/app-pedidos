@@ -3,6 +3,33 @@ import { emptyOrder } from '../../utils/orderHelpers.js';
 import { Button, Input, Label, SelectField, Textarea } from '../ui/Primitives.jsx';
 import { Loader2 } from 'lucide-react';
 
+function addBusinessDays(dateString, businessDays, holidays = []) {
+  if (!dateString || !businessDays) return "";
+
+  const date = new Date(`${dateString}T12:00:00`);
+  let daysToAdd = Number(businessDays);
+
+  const holidaySet = new Set(
+    holidays.map((h) => new Date(h.data).toISOString().slice(0, 10))
+  );
+
+  while (daysToAdd > 0) {
+    date.setDate(date.getDate() + 1);
+
+    const day = date.getDay();
+    const iso = date.toISOString().slice(0, 10);
+
+    const isWeekend = day === 0 || day === 6;
+    const isHoliday = holidaySet.has(iso);
+
+    if (!isWeekend && !isHoliday) {
+      daysToAdd -= 1;
+    }
+  }
+
+  return date.toISOString().slice(0, 10);
+}
+
 const itemOptions = [
   "Jogo da memória",
   "Jogo de tabuleiro",
@@ -27,7 +54,11 @@ const tipoEnvioOptions = [
 
 export default function OrderForm({ onSave, initialValues, onCancel, clients, themes, settings, saving }) {
   const [form, setForm] = useState(initialValues || emptyOrder);
-
+  const prazoCalculado = addBusinessDays(
+    form.dataPedido,
+    dias,
+    holidays
+  );
   useEffect(() => {
     setForm(initialValues || emptyOrder);
   }, [initialValues]);
