@@ -25,7 +25,7 @@ const tipoEnvioOptions = [
   "RETIRADA",
 ];
 
-export default function OrderForm({ onSave, initialValues, onCancel, clients, themes, saving }) {
+export default function OrderForm({ onSave, initialValues, onCancel, clients, themes, settings, saving }) {
   const [form, setForm] = useState(initialValues || emptyOrder);
 
   useEffect(() => {
