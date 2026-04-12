@@ -5,7 +5,7 @@ import { Card, Button } from './components/ui/Primitives.jsx';
 import Modal from './components/layout/Modal.jsx';
 import StatCard from './components/common/StatCard.jsx';
 import ClientForm from './components/forms/ClientForm.jsx';
-import OrderForm from './components/forms/OrderForm.jsx';
+import OrderForm from './components/forms/OrderForm.jsx';Lpr
 import PedidosTab from './components/tabs/PedidosTab.jsx';
 import AgendaTab from './components/tabs/AgendaTab.jsx';
 import ClientesTab from './components/tabs/ClientesTab.jsx';
@@ -98,8 +98,7 @@ export default function App() {
   supabase.from("clients").select("*").order("nome", { ascending: true }),
   supabase.from("themes").select("*").order("nome", { ascending: true }),
   supabase.from("settings").select("*").limit(1).single(),
-  supabase.from("holidays").select("*"),
-  supabase.from("settings").select("*").limit(1).single(),   
+  supabase.from("holidays").select("*"),  
 ]);
 
     if (ordersError) throw ordersError;
