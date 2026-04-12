@@ -33,6 +33,39 @@ export default function App() {
   const [settings, setSettings] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
+
+  const saveSettings = async (formData) => {
+  setSavingSettings(true);
+  setError("");
+
+  try {
+    if (settings?.id) {
+      const { error } = await supabase
+        .from("settings")
+        .update({
+          diasPadraoProducao: Number(formData.diasPadraoProducao || 0),
+        })
+        .eq("id", settings.id);
+
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from("settings")
+        .insert({
+          diasPadraoProducao: Number(formData.diasPadraoProducao || 0),
+        });
+
+      if (error) throw error;
+    }
+
+    setSettingsOpen(false);
+    await loadData();
+  } catch (err) {
+    setError(err.message || "Erro ao salvar configurações.");
+  } finally {
+    setSavingSettings(false);
+  }
+};
   
   const saveThemeIfNeeded = async (tema) => {
   const nome = String(tema || "").trim();
@@ -240,6 +273,24 @@ export default function App() {
         </div>
 
         {error && <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>}
+        <Card>
+  <div className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p className="text-sm text-slate-500">Prazo de produção padrão</p>
+      <p className="text-2xl font-semibold text-slate-900">
+        {settings?.diasPadraoProducao ?? 0} dia(s) útil(eis)
+      </p>
+    </div>
+
+    <Button
+      variant="outline"
+      className="rounded-2xl"
+      onClick={() => setSettingsOpen(true)}
+    >
+      Alterar
+    </Button>
+  </div>
+</Card>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <StatCard title="Total de pedidos" value={stats.total} subtitle="Todos os pedidos" icon={Package} />
@@ -272,7 +323,18 @@ export default function App() {
             holidays={holidays}
         />
       </Modal>
-
+<Modal
+  open={settingsOpen}
+  title="Alterar prazo de produção padrão"
+  onClose={() => setSettingsOpen(false)}
+>
+  <SettingsForm
+    settings={settings}
+    onSave={saveSettings}
+    saving={savingSettings}
+    onCancel={() => setSettingsOpen(false)}
+  />
+</Modal>
       <Modal open={clientOpen} title={editingClient ? 'Editar cliente' : 'Novo cliente'} onClose={() => setClientOpen(false)}>
         <ClientForm onSave={saveClient} initialValues={editingClient || emptyClient} onCancel={() => setClientOpen(false)} saving={savingClient} />
       </Modal>
