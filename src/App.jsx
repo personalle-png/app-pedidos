@@ -33,6 +33,7 @@ export default function App() {
   const [holidays, setHolidays] = useState([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [products, setProducts] = useState([]);
 
   const saveSettings = async (formData) => {
   setSavingSettings(true);
@@ -92,11 +93,13 @@ export default function App() {
   { data: themesData, error: themesError },
   { data: settingsData, error: settingsError },
   { data: holidaysData, error: holidaysError },    
+  { data: productsData, error: productsError },
 ] = await Promise.all([
   supabase.from("orders").select("*").order("pedido", { ascending: true }),
   supabase.from("clients").select("*").order("nome", { ascending: true }),
   supabase.from("themes").select("*").order("nome", { ascending: true }),
   supabase.from("settings").select("*").limit(1).single(),
+  supabase.from("products").select("*").eq("ativo", true).order("nome", { ascending: true }),
   supabase.from("holidays").select("*"),  
 ]);
 
@@ -108,6 +111,9 @@ export default function App() {
     
     if (holidaysError) throw holidaysError;
       setHolidays(holidaysData || []);
+
+    if (productsError) throw productsError;
+      setProducts(productsData || []);
     
     setOrders(ordersData || []);
     setClients(clientsData || []);
@@ -319,6 +325,7 @@ export default function App() {
             settings={settings}
             saving={savingOrder}
             holidays={holidays}
+            products={products}
         />
       </Modal>
 <Modal
