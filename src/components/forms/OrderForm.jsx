@@ -112,10 +112,14 @@ export default function OrderForm({ onSave, initialValues, onCancel, clients, sa
           <Label>Data da festa</Label>
           <Input type="date" value={form.dataFesta} onChange={(e) => updateField('dataFesta', e.target.value)} />
         </div>
-        <div className="grid gap-2">
-          <Label>Prazo de entrega</Label>
-          <Input type="number" value={form.prazoEntrega} onChange={(e) => updateField('prazoEntrega', e.target.value)} />
-        </div>
+       <div className="grid gap-2">
+  <Label>Prazo de produção</Label>
+  <Input
+    type="date"
+    value={form.prazoEntrega}
+    onChange={(e) => updateField("prazoEntrega", e.target.value)}
+  />
+</div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
