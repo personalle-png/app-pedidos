@@ -33,6 +33,19 @@ export default function App() {
   setLoading(true);
   setError("");
 
+   const saveThemeIfNeeded = async (tema) => {
+  const nome = String(tema || "").trim();
+  if (!nome) return;
+
+  const { error } = await supabase
+    .from("themes")
+    .insert({ nome });
+
+  if (error && !String(error.message).toLowerCase().includes("duplicate")) {
+    throw error;
+  }
+};
+
   try {
     const [
       { data: ordersData, error: ordersError },
@@ -63,46 +76,57 @@ export default function App() {
   }, []);
 
   const saveOrder = async (formData) => {
-    setSavingOrder(true);
-    setError('');
+  setSavingOrder(true);
+  setError("");
 
-    try {
-      const payload = {
-        cliente: formData.cliente,
-        item: formData.item,
-        qtd: Number(formData.qtd || 0),
-        situacao: formData.situacao,
-        cidade: formData.cidade,
-        estado: formData.estado,
-        dataPedido: formData.dataPedido || null,
-        referencia: formData.referencia || null,
-        dataFesta: formData.dataFesta || null,
-        observacoesPedido: formData.observacoesPedido || '',
-        observacoesInternas: formData.observacoesInternas || '',
-        prazoEntrega: formData.prazoEntrega || null,
-        prazoTransporte: Number(formData.prazoTransporte || 0),
-        tipoEnvio: formData.tipoEnvio || "",
-        tema: formData.tema || "",
-      };
+  try {
+    await saveThemeIfNeeded(formData.tema);
 
-      if (editingOrder) {
-        const { error } = await supabase.from('orders').update({ ...payload, pedido: Number(formData.pedido) }).eq('id', editingOrder.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from('orders').insert(payload);
-        if (error) throw error;
-      }
+    const payload = {
+      cliente: formData.cliente,
+      item: formData.item,
+      tema: formData.tema || "",
+      qtd: Number(formData.qtd || 0),
+      situacao: formData.situacao,
+      cidade: formData.cidade,
+      estado: formData.estado,
+      dataPedido: formData.dataPedido || null,
+      referencia: formData.referencia || null,
+      dataFesta: formData.dataFesta || null,
+      observacoesPedido: formData.observacoesPedido || "",
+      prazoEntrega: formData.prazoEntrega || null,
+      prazoTransporte: Number(formData.prazoTransporte || 0),
+      tipoEnvio: formData.tipoEnvio || "",
+    };
 
-      setOrderOpen(false);
-      setEditingOrder(null);
-      await loadData();
-    } catch (err) {
-      console.error('Erro ao salvar pedido:', err);
-      setError(err.message || 'Erro ao salvar pedido.');
-    } finally {
-      setSavingOrder(false);
+    if (editingOrder) {
+      const { error } = await supabase
+        .from("orders")
+        .update({
+          ...payload,
+          pedido: Number(formData.pedido),
+        })
+        .eq("id", editingOrder.id);
+
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from("orders")
+        .insert(payload);
+
+      if (error) throw error;
     }
-  };
+
+    setOrderOpen(false);
+    setEditingOrder(null);
+    await loadData();
+  } catch (err) {
+    console.error("Erro ao salvar pedido:", err);
+    setError(err.message || "Erro ao salvar pedido.");
+  } finally {
+    setSavingOrder(false);
+  }
+};
 
   const saveClient = async (formData) => {
     setSavingClient(true);
