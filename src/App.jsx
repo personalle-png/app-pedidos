@@ -27,27 +27,36 @@ export default function App() {
   const [savingClient, setSavingClient] = useState(false);
   const [error, setError] = useState('');
   const [tab, setTab] = useState('pedidos');
+  const [themes, setThemes] = useState([]);
 
   const loadData = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const [{ data: ordersData, error: ordersError }, { data: clientsData, error: clientsError }] = await Promise.all([
-        supabase.from('orders').select('*').order('pedido', { ascending: true }),
-        supabase.from('clients').select('*').order('nome', { ascending: true }),
-      ]);
+  setLoading(true);
+  setError("");
 
-      if (ordersError) throw ordersError;
-      if (clientsError) throw clientsError;
+  try {
+    const [
+      { data: ordersData, error: ordersError },
+      { data: clientsData, error: clientsError },
+      { data: themesData, error: themesError },
+    ] = await Promise.all([
+      supabase.from("orders").select("*").order("pedido", { ascending: true }),
+      supabase.from("clients").select("*").order("nome", { ascending: true }),
+      supabase.from("themes").select("*").order("nome", { ascending: true }),
+    ]);
 
-      setOrders(ordersData || []);
-      setClients(clientsData || []);
-    } catch (err) {
-      setError(err.message || 'Erro ao carregar dados do Supabase.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    if (ordersError) throw ordersError;
+    if (clientsError) throw clientsError;
+    if (themesError) throw themesError;
+
+    setOrders(ordersData || []);
+    setClients(clientsData || []);
+    setThemes(themesData || []);
+  } catch (err) {
+    setError(err.message || "Erro ao carregar dados do Supabase.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     loadData();
@@ -211,7 +220,14 @@ export default function App() {
       </div>
 
       <Modal open={orderOpen} title={editingOrder ? 'Editar pedido' : 'Novo pedido'} onClose={() => setOrderOpen(false)}>
-        <OrderForm onSave={saveOrder} initialValues={editingOrder || emptyOrder} onCancel={() => setOrderOpen(false)} clients={clients} saving={savingOrder} />
+       <OrderForm
+  onSave={saveOrder}
+  initialValues={editingOrder || emptyOrder}
+  onCancel={() => setOrderOpen(false)}
+  clients={clients}
+  themes={themes}
+  saving={savingOrder}
+/>
       </Modal>
 
       <Modal open={clientOpen} title={editingClient ? 'Editar cliente' : 'Novo cliente'} onClose={() => setClientOpen(false)}>
