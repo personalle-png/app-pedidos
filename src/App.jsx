@@ -73,6 +73,7 @@ export default function App() {
         prazoEntrega: formData.prazoEntrega || null,
         prazoTransporte: Number(formData.prazoTransporte || 0),
         tipoEnvio: formData.tipoEnvio || "",
+        tema: formData.tema,
       };
 
       if (editingOrder) {
