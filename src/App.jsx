@@ -39,6 +39,25 @@ export default function App() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [savingProduct, setSavingProduct] = useState(false);
 
+  const saveProductIfNeeded = async (item) => {
+  const nome = String(item || "").trim();
+  if (!nome) return;
+
+  const nomePadronizado =
+    nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase();
+
+  const { error } = await supabase
+    .from("products")
+    .upsert(
+      {
+        nome: nomePadronizado,
+        ativo: true,
+      },
+      { onConflict: "nome" }
+    );
+
+  if (error) throw error;
+};
   const saveProduct = async (formData) => {
   setSavingProduct(true);
   setError("");
@@ -188,6 +207,7 @@ export default function App() {
 
   try {
     await saveThemeIfNeeded(formData.tema);
+    await saveProductIfNeeded(formData.item);
 
     const payload = {
       cliente: formData.cliente,
