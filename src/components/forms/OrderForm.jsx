@@ -155,15 +155,21 @@ export default function OrderForm({
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="grid gap-2">
-          <Label>Item</Label>
-          <SelectField
-            value={typeof form.item === "object" ? form.item.value : form.item || ""}
-            onChange={(value) => updateField("item", value)}
-            options={(products || []).map((product) => product.nome)}
-            placeholder="Selecione um produto"
-          />
-        </div>
+       <div className="grid gap-2">
+        <Label>Item</Label>
+        <Input
+          list="products-list"
+          value={typeof form.item === "object" ? form.item.value : form.item || ""}
+          onChange={(e) => updateField("item", e.target.value)}
+          placeholder="Digite ou selecione um produto"
+          required
+        />
+        <datalist id="products-list">
+          {(products || []).map((product) => (
+            <option key={product.id} value={product.nome} />
+          ))}
+        </datalist>
+      </div>
 
         <div className="grid gap-2">
           <Label>Tema</Label>
