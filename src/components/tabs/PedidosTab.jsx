@@ -2,7 +2,12 @@ import React from 'react';
 import { Search, Loader2, MessageCircle, PencilLine, Trash2 } from 'lucide-react';
 import { Card, Input, SelectField, Button, Badge } from '../ui/Primitives.jsx';
 import { formatDate, buildWhatsAppMessage, getWhatsAppLink } from '../../utils/formatters.js';
-import { daysUntil, getFestaAlert, getEntregaCombinadaAlert, getProducaoAlert } from '../../utils/orderHelpers.js';
+import {
+  getFestaAlert,
+  getEntregaCombinadaAlert,
+  getProducaoAlert,
+  getCardStyleByProducao
+} from "../../utils/orderHelpers.js";
 
 export default function PedidosTab({ loading, filteredOrders, search, setSearch, statusFilter, setStatusFilter, alertFilter, setAlertFilter, statuses, alertas, clients, setEditingOrder, setOrderOpen, deleteOrder, proximasFestas }) {
   return (
