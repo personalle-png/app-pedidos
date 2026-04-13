@@ -417,7 +417,13 @@ export default function App() {
         </div>
 
         {tab === 'pedidos' && <PedidosTab loading={loading} filteredOrders={filteredOrders} search={search} setSearch={setSearch} statusFilter={statusFilter} setStatusFilter={setStatusFilter} alertFilter={alertFilter} setAlertFilter={setAlertFilter} statuses={statuses} alertas={alertas} clients={clients} setEditingOrder={setEditingOrder} setOrderOpen={setOrderOpen} deleteOrder={deleteOrder} proximasFestas={proximasFestas} />}
-        {tab === 'agenda' && (<AgendaTab orders={orders} setEditingOrder={setEditingOrder} setOrderOpen={setOrderOpen}/>)}
+        {tab === 'agenda' && (
+  <AgendaTab
+    orders={orders}
+    setEditingOrder={setEditingOrder}
+    setOrderOpen={setOrderOpen}
+  />
+)}
         {tab === 'clientes' && <ClientesTab clientSearch={clientSearch} setClientSearch={setClientSearch} filteredClients={filteredClients} orders={orders} setEditingClient={setEditingClient} setClientOpen={setClientOpen} deleteClient={deleteClient} clients={clients} />}
       </div>
 
