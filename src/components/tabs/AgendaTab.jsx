@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Card, Badge, Button } from "../ui/Primitives.jsx";
 import {
   getFestaAlert,
@@ -8,36 +8,105 @@ import {
 import { formatDate } from "../../utils/formatters.js";
 import { PencilLine } from "lucide-react";
 
+function getRowStyle(producao, entrega, festa) {
+  const worst = Math.min(
+    producao?.weight ?? 99,
+    entrega?.weight ?? 99,
+    festa?.weight ?? 99
+  );
+
+  if (worst === 1) return "bg-red-50";
+  if (worst === 2 || worst === 3) return "bg-amber-50";
+  if (worst === 4) return "bg-blue-50";
+  return "";
+}
+
+function isAtrasado(producao, entrega, festa) {
+  return (
+    producao?.label === "Produção atrasada" ||
+    entrega?.label === "Atrasado" ||
+    festa?.label === "Festa passou"
+  );
+}
+
+function isUrgente(producao, entrega, festa) {
+  return (
+    isAtrasado(producao, entrega, festa) ||
+    producao?.label === "Produzir hoje" ||
+    producao?.label === "Urgente" ||
+    entrega?.label === "Hoje" ||
+    entrega?.label === "Muito próximo" ||
+    festa?.label === "Hoje" ||
+    festa?.label === "Muito próxima"
+  );
+}
+
 export default function AgendaTab({ orders, setEditingOrder, setOrderOpen }) {
+  const [filtroAgenda, setFiltroAgenda] = useState("Todos");
+
   const agendaOrdenada = useMemo(() => {
-    return [...(orders || [])].sort((a, b) => {
-      const pa = getProducaoAlert(a.prazoEntrega).weight;
-      const pb = getProducaoAlert(b.prazoEntrega).weight;
-      if (pa !== pb) return pa - pb;
+    return [...(orders || [])]
+      .filter((order) => {
+        const producao = getProducaoAlert(order.prazoEntrega);
+        const entrega = getEntregaCombinadaAlert(order);
+        const festa = getFestaAlert(order.dataFesta);
 
-      const ea = getEntregaCombinadaAlert(a).weight;
-      const eb = getEntregaCombinadaAlert(b).weight;
-      if (ea !== eb) return ea - eb;
+        if (filtroAgenda === "Atrasados") {
+          return isAtrasado(producao, entrega, festa);
+        }
 
-      const fa = getFestaAlert(a.dataFesta).weight;
-      const fb = getFestaAlert(b.dataFesta).weight;
-      if (fa !== fb) return fa - fb;
+        if (filtroAgenda === "Urgentes") {
+          return isUrgente(producao, entrega, festa);
+        }
 
-      const da = a.prazoEntrega ? new Date(a.prazoEntrega).getTime() : Infinity;
-      const db = b.prazoEntrega ? new Date(b.prazoEntrega).getTime() : Infinity;
+        return true;
+      })
+      .sort((a, b) => {
+        const pa = getProducaoAlert(a.prazoEntrega).weight;
+        const pb = getProducaoAlert(b.prazoEntrega).weight;
+        if (pa !== pb) return pa - pb;
 
-      return da - db;
-    });
-  }, [orders]);
+        const ea = getEntregaCombinadaAlert(a).weight;
+        const eb = getEntregaCombinadaAlert(b).weight;
+        if (ea !== eb) return ea - eb;
+
+        const fa = getFestaAlert(a.dataFesta).weight;
+        const fb = getFestaAlert(b.dataFesta).weight;
+        if (fa !== fb) return fa - fb;
+
+        const da = a.prazoEntrega ? new Date(a.prazoEntrega).getTime() : Infinity;
+        const db = b.prazoEntrega ? new Date(b.prazoEntrega).getTime() : Infinity;
+
+        return da - db;
+      });
+  }, [orders, filtroAgenda]);
 
   return (
     <Card>
       <div className="p-6">
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold text-slate-900">Agenda de prioridade</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Gestão por produção, entrega combinada e data da festa.
-          </p>
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">Agenda de prioridade</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Gestão por produção, entrega combinada e data da festa.
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            {["Todos", "Urgentes", "Atrasados"].map((item) => (
+              <button
+                key={item}
+                onClick={() => setFiltroAgenda(item)}
+                className={`rounded-xl px-3 py-2 text-sm font-medium border ${
+                  filtroAgenda === item
+                    ? "bg-slate-900 text-white border-slate-900"
+                    : "bg-white text-slate-700 border-slate-300"
+                }`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -64,9 +133,13 @@ export default function AgendaTab({ orders, setEditingOrder, setOrderOpen }) {
                 const producao = getProducaoAlert(order.prazoEntrega);
                 const entrega = getEntregaCombinadaAlert(order);
                 const festa = getFestaAlert(order.dataFesta);
+                const rowStyle = getRowStyle(producao, entrega, festa);
 
                 return (
-                  <tr key={order.id} className="border-b last:border-0 align-top">
+                  <tr
+                    key={order.id}
+                    className={`border-b last:border-0 align-top ${rowStyle}`}
+                  >
                     <td className="px-3 py-3 font-medium text-slate-800">
                       #{order.pedido}
                     </td>
