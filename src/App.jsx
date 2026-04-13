@@ -9,7 +9,14 @@ import OrderForm from './components/forms/OrderForm.jsx';
 import PedidosTab from './components/tabs/PedidosTab.jsx';
 import AgendaTab from './components/tabs/AgendaTab.jsx';
 import ClientesTab from './components/tabs/ClientesTab.jsx';
-import { daysUntil, emptyClient, emptyOrder } from './utils/orderHelpers.js';
+import {
+  daysUntil,
+  emptyClient,
+  emptyOrder,
+  getFestaAlert,
+  getEntregaCombinadaAlert,
+  getProducaoAlert,
+} from './utils/orderHelpers.js';
 import SettingsForm from "./components/forms/SettingsForm.jsx";
 import ProductForm from "./components/forms/ProductForm.jsx";
 
