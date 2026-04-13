@@ -41,37 +41,90 @@ function isUrgente(producao, entrega, festa) {
   );
 }
 
+function isNoPrazo(producao, entrega, festa) {
+  return (
+    !isAtrasado(producao, entrega, festa) &&
+    !isUrgente(producao, entrega, festa)
+  );
+}
+
+function CounterCard({ title, value, tone }) {
+  const styles = {
+    red: "bg-red-50 border-red-200 text-red-700",
+    amber: "bg-amber-50 border-amber-200 text-amber-700",
+    emerald: "bg-emerald-50 border-emerald-200 text-emerald-700",
+    slate: "bg-slate-50 border-slate-200 text-slate-700",
+  };
+
+  return (
+    <div className={`rounded-2xl border px-4 py-3 ${styles[tone] || styles.slate}`}>
+      <p className="text-sm">{title}</p>
+      <p className="mt-1 text-2xl font-semibold">{value}</p>
+    </div>
+  );
+}
+
 export default function AgendaTab({ orders, setEditingOrder, setOrderOpen }) {
   const [filtroAgenda, setFiltroAgenda] = useState("Todos");
 
-  const agendaOrdenada = useMemo(() => {
-    return [...(orders || [])]
-      .filter((order) => {
-        const producao = getProducaoAlert(order.prazoEntrega);
-        const entrega = getEntregaCombinadaAlert(order);
-        const festa = getFestaAlert(order.dataFesta);
+  const pedidosComStatus = useMemo(() => {
+    return (orders || []).map((order) => {
+      const producao = getProducaoAlert(order.prazoEntrega);
+      const entrega = getEntregaCombinadaAlert(order);
+      const festa = getFestaAlert(order.dataFesta);
 
+      return {
+        ...order,
+        producao,
+        entrega,
+        festa,
+      };
+    });
+  }, [orders]);
+
+  const contadores = useMemo(() => {
+    return {
+      total: pedidosComStatus.length,
+      atrasados: pedidosComStatus.filter((order) =>
+        isAtrasado(order.producao, order.entrega, order.festa)
+      ).length,
+      urgentes: pedidosComStatus.filter((order) =>
+        isUrgente(order.producao, order.entrega, order.festa)
+      ).length,
+      noPrazo: pedidosComStatus.filter((order) =>
+        isNoPrazo(order.producao, order.entrega, order.festa)
+      ).length,
+    };
+  }, [pedidosComStatus]);
+
+  const agendaOrdenada = useMemo(() => {
+    return [...pedidosComStatus]
+      .filter((order) => {
         if (filtroAgenda === "Atrasados") {
-          return isAtrasado(producao, entrega, festa);
+          return isAtrasado(order.producao, order.entrega, order.festa);
         }
 
         if (filtroAgenda === "Urgentes") {
-          return isUrgente(producao, entrega, festa);
+          return isUrgente(order.producao, order.entrega, order.festa);
+        }
+
+        if (filtroAgenda === "No prazo") {
+          return isNoPrazo(order.producao, order.entrega, order.festa);
         }
 
         return true;
       })
       .sort((a, b) => {
-        const pa = getProducaoAlert(a.prazoEntrega).weight;
-        const pb = getProducaoAlert(b.prazoEntrega).weight;
+        const pa = a.producao.weight;
+        const pb = b.producao.weight;
         if (pa !== pb) return pa - pb;
 
-        const ea = getEntregaCombinadaAlert(a).weight;
-        const eb = getEntregaCombinadaAlert(b).weight;
+        const ea = a.entrega.weight;
+        const eb = b.entrega.weight;
         if (ea !== eb) return ea - eb;
 
-        const fa = getFestaAlert(a.dataFesta).weight;
-        const fb = getFestaAlert(b.dataFesta).weight;
+        const fa = a.festa.weight;
+        const fb = b.festa.weight;
         if (fa !== fb) return fa - fb;
 
         const da = a.prazoEntrega ? new Date(a.prazoEntrega).getTime() : Infinity;
@@ -79,34 +132,39 @@ export default function AgendaTab({ orders, setEditingOrder, setOrderOpen }) {
 
         return da - db;
       });
-  }, [orders, filtroAgenda]);
+  }, [pedidosComStatus, filtroAgenda]);
 
   return (
     <Card>
       <div className="p-6">
-        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900">Agenda de prioridade</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Gestão por produção, entrega combinada e data da festa.
-            </p>
-          </div>
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold text-slate-900">Agenda de prioridade</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Gestão por produção, entrega combinada e data da festa.
+          </p>
+        </div>
 
-          <div className="flex gap-2">
-            {["Todos", "Urgentes", "Atrasados"].map((item) => (
-              <button
-                key={item}
-                onClick={() => setFiltroAgenda(item)}
-                className={`rounded-xl px-3 py-2 text-sm font-medium border ${
-                  filtroAgenda === item
-                    ? "bg-slate-900 text-white border-slate-900"
-                    : "bg-white text-slate-700 border-slate-300"
-                }`}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
+        <div className="mb-4 grid gap-3 md:grid-cols-4">
+          <CounterCard title="Total" value={contadores.total} tone="slate" />
+          <CounterCard title="Atrasados" value={contadores.atrasados} tone="red" />
+          <CounterCard title="Urgentes" value={contadores.urgentes} tone="amber" />
+          <CounterCard title="No prazo" value={contadores.noPrazo} tone="emerald" />
+        </div>
+
+        <div className="mb-4 flex flex-wrap gap-2">
+          {["Todos", "Urgentes", "Atrasados", "No prazo"].map((item) => (
+            <button
+              key={item}
+              onClick={() => setFiltroAgenda(item)}
+              className={`rounded-xl px-3 py-2 text-sm font-medium border ${
+                filtroAgenda === item
+                  ? "bg-slate-900 text-white border-slate-900"
+                  : "bg-white text-slate-700 border-slate-300"
+              }`}
+            >
+              {item}
+            </button>
+          ))}
         </div>
 
         <div className="overflow-x-auto">
@@ -130,10 +188,7 @@ export default function AgendaTab({ orders, setEditingOrder, setOrderOpen }) {
 
             <tbody>
               {agendaOrdenada.map((order) => {
-                const producao = getProducaoAlert(order.prazoEntrega);
-                const entrega = getEntregaCombinadaAlert(order);
-                const festa = getFestaAlert(order.dataFesta);
-                const rowStyle = getRowStyle(producao, entrega, festa);
+                const rowStyle = getRowStyle(order.producao, order.entrega, order.festa);
 
                 return (
                   <tr
@@ -158,23 +213,23 @@ export default function AgendaTab({ orders, setEditingOrder, setOrderOpen }) {
                     </td>
 
                     <td className="px-3 py-3">
-                      <Badge tone={producao.tone}>
-                        {producao.label}
-                        {producao.texto ? ` (${producao.texto})` : ""}
+                      <Badge tone={order.producao.tone}>
+                        {order.producao.label}
+                        {order.producao.texto ? ` (${order.producao.texto})` : ""}
                       </Badge>
                     </td>
 
                     <td className="px-3 py-3">
-                      <Badge tone={entrega.tone}>
-                        {entrega.label}
-                        {entrega.texto ? ` (${entrega.texto})` : ""}
+                      <Badge tone={order.entrega.tone}>
+                        {order.entrega.label}
+                        {order.entrega.texto ? ` (${order.entrega.texto})` : ""}
                       </Badge>
                     </td>
 
                     <td className="px-3 py-3">
-                      <Badge tone={festa.tone}>
-                        {festa.label}
-                        {festa.texto ? ` (${festa.texto})` : ""}
+                      <Badge tone={order.festa.tone}>
+                        {order.festa.label}
+                        {order.festa.texto ? ` (${order.festa.texto})` : ""}
                       </Badge>
                     </td>
 
