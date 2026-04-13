@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from "react";
 import { Plus, MessageCircle, PencilLine, Trash2 } from 'lucide-react';
 import { Card, Input, Button } from '../ui/Primitives.jsx';
 import { getWhatsAppLink } from '../../utils/formatters.js';
