@@ -152,3 +152,21 @@ export function badgeTone(tone) {
   if (tone === 'blue') return 'bg-blue-50 text-blue-700 border-blue-200';
   return 'bg-slate-50 text-slate-700 border-slate-200';
 }
+
+export function getCardStyleByProducao(producao) {
+  if (!producao) return "";
+
+  if (producao.weight === 1) {
+    return "bg-red-50 border-red-200";
+  }
+
+  if (producao.weight === 2 || producao.weight === 3) {
+    return "bg-amber-50 border-amber-200";
+  }
+
+  if (producao.weight === 4) {
+    return "bg-blue-50 border-blue-200";
+  }
+
+  return "bg-white border-slate-200";
+}
