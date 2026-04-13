@@ -2,6 +2,9 @@ import React from 'react';
 import { Plus, MessageCircle, PencilLine, Trash2 } from 'lucide-react';
 import { Card, Input, Button } from '../ui/Primitives.jsx';
 import { getWhatsAppLink } from '../../utils/formatters.js';
+import ImportarClienteImagem from "../importacao/ImportarClienteImagem.jsx";
+
+const [importOpen, setImportOpen] = useState(false);
 
 export default function ClientesTab({ clientSearch, setClientSearch, filteredClients, orders, setEditingClient, setClientOpen, deleteClient, clients }) {
   return (
@@ -10,7 +13,18 @@ export default function ClientesTab({ clientSearch, setClientSearch, filteredCli
         <div className="p-6">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <h2 className="text-xl font-semibold text-slate-900">Cadastro de clientes</h2>
-            <Button className="rounded-2xl" onClick={() => { setEditingClient(null); setClientOpen(true); }}><Plus className="mr-2 h-4 w-4" /> Novo cliente</Button>
+            <div className="flex gap-2">
+  <Button
+    variant="outline"
+    onClick={() => setImportOpen(true)}
+  >
+    📷 Importar cliente
+  </Button>
+
+  <Button onClick={() => setClientOpen(true)}>
+    + Novo cliente
+  </Button>
+</div>
           </div>
 
           <div className="mt-3">
@@ -80,3 +94,24 @@ export default function ClientesTab({ clientSearch, setClientSearch, filteredCli
     </div>
   );
 }
+
+{importOpen && (
+  <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+    <div className="w-full max-w-6xl max-h-[90vh] overflow-auto rounded-3xl bg-white">
+      
+      <ImportarClienteImagem
+        onConfirmImport={(data) => {
+          console.log("Cliente importado:", data);
+          setImportOpen(false);
+        }}
+      />
+
+      <div className="p-4 flex justify-end">
+        <Button variant="outline" onClick={() => setImportOpen(false)}>
+          Fechar
+        </Button>
+      </div>
+
+    </div>
+  </div>
+)}
