@@ -43,7 +43,15 @@ export default function PedidosTab({ loading, filteredOrders, search, setSearch,
                   const whatsappLink = client?.telefone ? getWhatsAppLink(client.telefone, buildWhatsAppMessage(order.cliente, order.item, order.pedido, order.dataFesta)) : null;
 
                   return (
-                    <div key={order.id} className="rounded-3xl border p-4 bg-white">
+                    const cardStyle = getCardStyleByProducao(producao);
+
+<div
+  key={order.id}
+  className={`rounded-3xl border p-4 transition-all ${cardStyle}`}
+>
+  if (producao.weight === 1) {
+  return "bg-red-50 border-red-200 border-l-4 border-l-red-500";
+}
                       <div className="flex flex-col gap-4 lg:flex-row lg:justify-between">
                         <div>
                           <div className="flex flex-wrap gap-2">
