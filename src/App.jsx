@@ -309,16 +309,46 @@ export default function App() {
     }
   };
 
-  const filteredOrders = useMemo(() => orders.filter((order) => {
-    const text = [order.cliente, order.item, order.cidade, order.estado, String(order.pedido)].join(' ').toLowerCase();
-    const festa = (() => {
-      const d = daysUntil(order.dataFesta);
-      if (d === null) return 'Sem data';
-      if (d < 0) return 'Festa passou';
-      if (d <= 3) return 'Muito próxima';
-      if (d <= 7) return 'Próxima';
-      return 'No prazo';
-    })();
+ const filteredOrders = useMemo(() => {
+  return orders
+    .filter((order) => {
+      const text = [
+        order.cliente,
+        order.item,
+        order.cidade,
+        order.estado,
+        String(order.pedido),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      const festa = getFestaAlert(order.dataFesta).label;
+
+      return (
+        text.includes(search.toLowerCase()) &&
+        (statusFilter === "Todos" || order.situacao === statusFilter) &&
+        (alertFilter === "Todos" || festa === alertFilter)
+      );
+    })
+    .sort((a, b) => {
+      const pa = getProducaoAlert(a.prazoEntrega).weight;
+      const pb = getProducaoAlert(b.prazoEntrega).weight;
+      if (pa !== pb) return pa - pb;
+
+      const ea = getEntregaCombinadaAlert(a).weight;
+      const eb = getEntregaCombinadaAlert(b).weight;
+      if (ea !== eb) return ea - eb;
+
+      const fa = getFestaAlert(a.dataFesta).weight;
+      const fb = getFestaAlert(b.dataFesta).weight;
+      if (fa !== fb) return fa - fb;
+
+      const da = a.prazoEntrega ? new Date(a.prazoEntrega).getTime() : Infinity;
+      const db = b.prazoEntrega ? new Date(b.prazoEntrega).getTime() : Infinity;
+
+      return da - db;
+    });
+}, [orders, search, statusFilter, alertFilter]);
 
     return text.includes(search.toLowerCase()) && (statusFilter === 'Todos' || order.situacao === statusFilter) && (alertFilter === 'Todos' || festa === alertFilter);
   }), [orders, search, statusFilter, alertFilter]);
