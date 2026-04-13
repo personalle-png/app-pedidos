@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Upload, Image as ImageIcon, Loader2, CheckCircle2 } from "lucide-react";
+import { supabase } from "../../lib/supabase";
 
 const emptyClient = {
   nome: "",
