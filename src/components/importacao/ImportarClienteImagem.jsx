@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { Upload, Image as ImageIcon, Loader2, CheckCircle2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import Tesseract from "tesseract.js";
+import { parseClienteFromOCR } from "../../utils/importacaoClienteParser";
 
 const emptyClient = {
   nome: "",
@@ -98,23 +100,7 @@ function isValidCpf(value) {
   return check2 === Number(cpf[10]);
 }
 
-function fakeExtractFromImage() {
-  return {
-    nome: "Rosana Rodrigues de Oliveira",
-    cpf: "",
-    telefone: "(11) 99493-7899",
-    email: "rosanoliveirabr@yahoo.com.br",
-    observacoes: "",
-    cep: "05628-050",
-    endereco: "R Gen Elides de S Queides",
-    numero: "28",
-    complemento: "",
-    complementoEndereco: "Apto 134",
-    bairro: "Jardim Colombo",
-    cidade: "São Paulo",
-    estado: "São Paulo",
-  };
-}
+
 
 export default function ImportarClienteImagem({ onConfirmImport }) {
   const [imageFile, setImageFile] = useState(null);
@@ -146,21 +132,33 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
   };
 
   const handleReadImage = async () => {
-    if (!imageFile) return;
+  if (!imageFile) return;
 
-    setProcessing(true);
+  setProcessing(true);
+  setImportError("");
+  setCpfError("");
 
-    try {
-      // TODO: substituir por leitura real da imagem
-      await new Promise((resolve) => setTimeout(resolve, 900));
-      const extracted = fakeExtractFromImage();
-      setForm((current) => ({ ...current, ...extracted }));
-      setHasExtraction(true);
-      setCpfError("");
-    } finally {
-      setProcessing(false);
-    }
-  };
+  try {
+    const result = await Tesseract.recognize(imageFile, "por+eng", {
+      logger: () => {},
+    });
+
+    const textoLido = result?.data?.text || "";
+    const extracted = parseClienteFromOCR(textoLido);
+
+    setForm((current) => ({
+      ...current,
+      ...extracted,
+    }));
+
+    setHasExtraction(true);
+  } catch (err) {
+    console.error(err);
+    setImportError("Não foi possível ler a imagem.");
+  } finally {
+    setProcessing(false);
+  }
+};
 
   function formatCep(value) {
   const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
@@ -541,6 +539,8 @@ const verificarDuplicidade = async () => {
 {importError && (
   <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
     {importError}
+  </div>
+)}
   </div>
 )}
               <div className="flex flex-wrap gap-2 pt-2">
