@@ -74,7 +74,9 @@ function extrairDepoisDoRotulo(texto, rotulo) {
 export function parseClienteFromOCR(rawText) {
   const texto = limparTextoOCR(rawText);
 
-  const nome = extrairDepoisDoRotulo(texto, /^nome completo\s*/i);
+  const nome =
+  extrairDepoisDoRotulo(texto, /^nome completo\s*/i) ||
+  extrairDepoisDoRotulo(texto, /^dados do cliente\s*/i);
 
   const telefoneResidencial = extrairDepoisDoRotulo(
     texto,
@@ -88,11 +90,15 @@ export function parseClienteFromOCR(rawText) {
 
   const celular = extrairDepoisDoRotulo(texto, /^celular\s*/i);
 
-  const email = extrairDepoisDoRotulo(texto, /^email\s*/i);
+  const email = limparEmail(
+  extrairDepoisDoRotulo(texto, /^email\s*/i)
+);
 
   const anotacoes = extrairDepoisDoRotulo(texto, /^anota[cç][õo]es\s*/i);
 
-  const cep = extrairDepoisDoRotulo(texto, /^cep\s*/i);
+  const cep = normalizarCep(
+  extrairDepoisDoRotulo(texto, /^cep\s*/i)
+);
 
   const endereco = extrairDepoisDoRotulo(texto, /^endere[cç]o\s*/i);
 
