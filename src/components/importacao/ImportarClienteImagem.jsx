@@ -107,6 +107,23 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
   };
 
   const handleConfirm = async () => {
+  const handleReadImage = async () => {
+    if (!imageFile) return;
+
+    setProcessing(true);
+
+    try {
+      // TODO: substituir por chamada real ao backend/OCR
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      const extracted = fakeExtractFromImage();
+      setForm((current) => ({ ...current, ...extracted }));
+      setHasExtraction(true);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleConfirm = async () => {
   try {
     const { error } = await supabase.from("clients").insert([
       {
@@ -132,43 +149,19 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
 
     alert("Cliente importado com sucesso!");
 
-    // limpa tudo depois de salvar
     setForm(emptyClient);
     setImageFile(null);
     setPreviewUrl("");
     setHasExtraction(false);
 
-    // fecha o modal se existir
     if (onConfirmImport) {
       onConfirmImport(form);
     }
-
   } catch (err) {
     console.error(err);
     alert("Erro ao importar cliente");
   }
 };
-
-  const handleReadImage = async () => {
-    if (!imageFile) return;
-
-    setProcessing(true);
-
-    try {
-      // TODO: substituir por chamada real ao backend/OCR
-      await new Promise((resolve) => setTimeout(resolve, 900));
-      const extracted = fakeExtractFromImage();
-      setForm((current) => ({ ...current, ...extracted }));
-      setHasExtraction(true);
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const handleConfirm = async () => {
-    if (!onConfirmImport) return;
-    await onConfirmImport(form);
-  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
