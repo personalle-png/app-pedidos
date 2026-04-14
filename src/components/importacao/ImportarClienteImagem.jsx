@@ -106,14 +106,48 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const handleFileChange = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleConfirm = async () => {
+  try {
+    const { error } = await supabase.from("clients").insert([
+      {
+        nome: form.nome,
+        telefone: form.telefone,
+        celular: form.celular,
+        email: form.email,
+        profissao: form.profissao,
+        empresa: form.empresa,
+        dataNascimento: form.dataNascimento,
+        observacoes: form.observacoes,
+        cep: form.cep,
+        endereco: form.endereco,
+        numero: form.numero,
+        complementoEndereco: form.complementoEndereco,
+        bairro: form.bairro,
+        cidade: form.cidade,
+        estado: form.estado,
+      },
+    ]);
 
-    setImageFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
+    if (error) throw error;
+
+    alert("Cliente importado com sucesso!");
+
+    // limpa tudo depois de salvar
+    setForm(emptyClient);
+    setImageFile(null);
+    setPreviewUrl("");
     setHasExtraction(false);
-  };
+
+    // fecha o modal se existir
+    if (onConfirmImport) {
+      onConfirmImport(form);
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao importar cliente");
+  }
+};
 
   const handleReadImage = async () => {
     if (!imageFile) return;
