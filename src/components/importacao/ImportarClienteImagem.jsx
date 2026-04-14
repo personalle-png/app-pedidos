@@ -287,7 +287,7 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
     reader.readAsDataURL(file);
   });
   
-  const handleReadImage = async () => {
+ const handleReadImage = async () => {
   if (!imageFile) return;
 
   setProcessing(true);
@@ -303,21 +303,21 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
       body: formData,
     });
 
-    if (!response.ok) {
-      throw new Error("Não foi possível analisar a imagem.");
-    }
+    const data = await response.json();
 
-    const extracted = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.error || "Não foi possível analisar a imagem.");
+    }
 
     setForm((current) => ({
       ...current,
-      ...extracted,
+      ...data,
     }));
 
     setHasExtraction(true);
   } catch (err) {
     console.error(err);
-    setImportError("Não foi possível ler a imagem.");
+    setImportError(err.message || "Não foi possível ler a imagem.");
   } finally {
     setProcessing(false);
   }
