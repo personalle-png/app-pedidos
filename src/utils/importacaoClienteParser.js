@@ -2,28 +2,12 @@ export function limparTextoOCR(texto) {
   return String(texto || "")
     .replace(/\r/g, "")
     .replace(/[|]/g, "I")
+    .replace(/[“”‘’]/g, "")
     .replace(/[•]/g, ".")
-    .replace(/[“”]/g, '"')
+    .replace(/[<>]/g, "")
+    .replace(/\t/g, " ")
+    .replace(/[ ]{2,}/g, " ")
     .trim();
-}
-
-function extrair(regex, texto) {
-  const match = texto.match(regex);
-  return match?.[1]?.trim() || "";
-}
-
-function extrairLinhaApos(rotuloRegex, texto) {
-  const linhas = texto.split("\n").map((l) => l.trim()).filter(Boolean);
-
-  for (let i = 0; i < linhas.length; i += 1) {
-    if (rotuloRegex.test(linhas[i])) {
-      const atual = linhas[i].replace(rotuloRegex, "").trim();
-      if (atual) return atual;
-      if (linhas[i + 1]) return linhas[i + 1].trim();
-    }
-  }
-
-  return "";
 }
 
 function normalizarCep(valor) {
@@ -32,66 +16,100 @@ function normalizarCep(valor) {
   return `${digits.slice(0, 5)}-${digits.slice(5)}`;
 }
 
+function limparTelefone(valor) {
+  return String(valor || "")
+    .replace(/[^\d()+\-\s]/g, "")
+    .trim();
+}
+
+function limparEmail(valor) {
+  return String(valor || "")
+    .replace(/\s+/g, "")
+    .replace(/[,;]/g, ".")
+    .trim()
+    .toLowerCase();
+}
+
+function limparCampo(valor) {
+  return String(valor || "")
+    .replace(/^[-:=>\s]+/, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function extrairDepoisDoRotulo(texto, rotulo) {
+  const linhas = texto.split("\n").map((l) => l.trim()).filter(Boolean);
+
+  for (let i = 0; i < linhas.length; i += 1) {
+    const linha = linhas[i];
+
+    if (rotulo.test(linha)) {
+      const semRotulo = limparCampo(linha.replace(rotulo, ""));
+      if (semRotulo) return semRotulo;
+
+      if (linhas[i + 1]) {
+        return limparCampo(linhas[i + 1]);
+      }
+    }
+  }
+
+  return "";
+}
+
 export function parseClienteFromOCR(rawText) {
   const texto = limparTextoOCR(rawText);
 
-  const nome =
-    extrairLinhaApos(/^nome\s*:?\s*/i, texto) ||
-    extrair(/nome\s*:?\s*([^\n]+)/i, texto);
+  const nome = extrairDepoisDoRotulo(texto, /^nome completo\s*/i);
 
-  const telefone =
-    extrair(/(?:celular|telefone|fone)\s*:?\s*([+\d().\s-]{8,})/i, texto) ||
-    extrairLinhaApos(/^(?:celular|telefone|fone)\s*:?\s*/i, texto);
-
-  const email =
-    extrair(/([a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})/i, texto);
-
-  const cep = normalizarCep(
-    extrair(/cep\s*:?\s*([\d.\-]{8,10})/i, texto) ||
-    extrairLinhaApos(/^cep\s*:?\s*/i, texto)
+  const telefoneResidencial = extrairDepoisDoRotulo(
+    texto,
+    /^telefone residencial\s*/i
   );
 
-  const endereco =
-    extrair(/endere[cç]o\s*:?\s*([^\n]+)/i, texto) ||
-    extrairLinhaApos(/^endere[cç]o\s*:?\s*/i, texto);
+  const telefoneComercial = extrairDepoisDoRotulo(
+    texto,
+    /^telefone comercial\s*/i
+  );
 
-  const numero =
-    extrair(/(?:n[uú]mero|num)\s*:?\s*([^\n]+)/i, texto) ||
-    extrairLinhaApos(/^(?:n[uú]mero|num)\s*:?\s*/i, texto);
+  const celular = extrairDepoisDoRotulo(texto, /^celular\s*/i);
 
-  const complementoEndereco =
-    extrair(/(?:complemento do endere[cç]o|complemento)\s*:?\s*([^\n]+)/i, texto) ||
-    extrairLinhaApos(/^(?:complemento do endere[cç]o|complemento)\s*:?\s*/i, texto);
+  const email = extrairDepoisDoRotulo(texto, /^email\s*/i);
 
-  const bairro =
-    extrair(/bairro\s*:?\s*([^\n]+)/i, texto) ||
-    extrairLinhaApos(/^bairro\s*:?\s*/i, texto);
+  const anotacoes = extrairDepoisDoRotulo(texto, /^anota[cç][õo]es\s*/i);
 
-  const cidade =
-    extrair(/cidade\s*:?\s*([^\n]+)/i, texto) ||
-    extrairLinhaApos(/^cidade\s*:?\s*/i, texto);
+  const cep = extrairDepoisDoRotulo(texto, /^cep\s*/i);
 
-  const estado =
-    extrair(/estado\s*:?\s*([^\n]+)/i, texto) ||
-    extrairLinhaApos(/^estado\s*:?\s*/i, texto);
+  const endereco = extrairDepoisDoRotulo(texto, /^endere[cç]o\s*/i);
 
-  const observacoes =
-    extrair(/(?:observa[cç][õo]es?|anota[cç][õo]es?)\s*:?\s*([\\s\\S]+)/i, texto);
+  const numero = extrairDepoisDoRotulo(texto, /^n[uú]mero\s*/i);
+
+  const complemento = extrairDepoisDoRotulo(texto, /^complemento\s*/i);
+
+  const bairro = extrairDepoisDoRotulo(texto, /^bairro\s*/i);
+
+  const cidade = extrairDepoisDoRotulo(texto, /^cidade\s*/i);
+
+  const estado = extrairDepoisDoRotulo(texto, /^estado\s*/i);
+
+  const telefoneFinal =
+    limparTelefone(celular) ||
+    limparTelefone(telefoneResidencial) ||
+    limparTelefone(telefoneComercial);
 
   return {
-    nome,
+    nome: limparCampo(nome),
     cpf: "",
-    telefone,
-    email,
-    observacoes,
-    cep,
-    endereco,
-    numero,
+    telefone: telefoneFinal,
+    email: limparEmail(email),
+    observacoes: limparCampo(anotacoes),
+    cep: normalizarCep(cep),
+    endereco: limparCampo(endereco),
+    numero: limparCampo(numero),
     complemento: "",
-    complementoEndereco,
-    bairro,
-    cidade,
-    estado,
+    complementoEndereco: limparCampo(complemento),
+    bairro: limparCampo(bairro),
+    cidade: limparCampo(cidade),
+    estado: limparCampo(estado),
     rawText: texto,
   };
 }
