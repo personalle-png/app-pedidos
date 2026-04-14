@@ -123,6 +123,9 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
   const [processing, setProcessing] = useState(false);
   const [hasExtraction, setHasExtraction] = useState(false);
   const [cpfError, setCpfError] = useState("");
+  const [importError, setImportError] = useState("");
+  const [cepLoading, setCepLoading] = useState(false);
+  const [cepError, setCepError] = useState("");
 
   const imageName = useMemo(
     () => imageFile?.name || "Nenhuma imagem selecionada",
@@ -159,61 +162,149 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
     }
   };
 
+  function formatCep(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 5) return digits;
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
+function normalizePhone(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+const buscarCep = async () => {
+  const cepLimpo = String(form.cep || "").replace(/\D/g, "");
+
+  if (cepLimpo.length !== 8) {
+    setCepError("Digite um CEP válido.");
+    return;
+  }
+
+  try {
+    setCepLoading(true);
+    setCepError("");
+
+    const res = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+    const data = await res.json();
+
+    if (data.erro) {
+      setCepError("CEP não encontrado.");
+      return;
+    }
+
+    setForm((current) => ({
+      ...current,
+      cep: formatCep(cepLimpo),
+      endereco: data.logradouro || current.endereco,
+      bairro: data.bairro || current.bairro,
+      cidade: data.localidade || current.cidade,
+      estado: data.uf || current.estado,
+      complemento: current.complemento || data.complemento || "",
+    }));
+  } catch {
+    setCepError("Erro ao buscar CEP.");
+  } finally {
+    setCepLoading(false);
+  }
+};
+
+const verificarDuplicidade = async () => {
+  const cpfLimpo = String(form.cpf || "").replace(/\D/g, "");
+  const telefoneLimpo = normalizePhone(form.telefone);
+
+  if (!cpfLimpo && !telefoneLimpo) return null;
+
+  let query = supabase
+    .from("clients")
+    .select("id, nome, cpf, telefone")
+    .limit(1);
+
+  if (cpfLimpo && telefoneLimpo) {
+    query = query.or(`cpf.eq.${cpfLimpo},telefone.eq.${telefoneLimpo}`);
+  } else if (cpfLimpo) {
+    query = query.eq("cpf", cpfLimpo);
+  } else {
+    query = query.eq("telefone", telefoneLimpo);
+  }
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+  return data?.[0] || null;
+};
+
   const handleConfirm = async () => {
-    if (!form.nome?.trim()) {
-      alert("Preencha o nome do cliente.");
+  setCpfError("");
+  setImportError("");
+
+  if (!form.nome?.trim()) {
+    setImportError("Preencha o nome do cliente.");
+    return;
+  }
+
+  if (!form.cpf?.trim()) {
+    setCpfError("Digite o CPF antes de confirmar.");
+    return;
+  }
+
+  if (!isValidCpf(form.cpf)) {
+    setCpfError("Digite um CPF válido.");
+    return;
+  }
+
+  try {
+    const cpfLimpo = String(form.cpf || "").replace(/\D/g, "");
+    const telefoneLimpo = normalizePhone(form.telefone);
+
+    const clienteExistente = await verificarDuplicidade();
+
+    if (clienteExistente) {
+      setImportError(
+        `Já existe um cliente cadastrado: ${clienteExistente.nome}. Verifique CPF ou telefone.`
+      );
       return;
     }
 
-    if (!form.cpf?.trim()) {
-      setCpfError("Digite o CPF antes de confirmar.");
-      return;
+    const payload = {
+      nome: form.nome,
+      cpf: cpfLimpo,
+      telefone: telefoneLimpo || "",
+      email: form.email,
+      observacoes: form.observacoes,
+      cep: form.cep,
+      endereco: form.endereco,
+      numero: form.numero,
+      complemento: form.complemento,
+      complementoEndereco: form.complementoEndereco,
+      bairro: form.bairro,
+      cidade: form.cidade,
+      estado: form.estado,
+    };
+
+    const { error } = await supabase.from("clients").insert([payload]);
+
+    if (error) throw error;
+
+    alert("Cliente importado com sucesso!");
+
+    const importedData = { ...form };
+
+    setForm(emptyClient);
+    setImageFile(null);
+    setPreviewUrl("");
+    setHasExtraction(false);
+    setCpfError("");
+    setImportError("");
+    setCepError("");
+
+    if (onConfirmImport) {
+      onConfirmImport(importedData);
     }
-
-    if (!isValidCpf(form.cpf)) {
-      setCpfError("Digite um CPF válido.");
-      return;
-    }
-
-    try {
-      const payload = {
-        nome: form.nome,
-        cpf: form.cpf,
-        telefone: form.telefone,
-        email: form.email,
-        observacoes: form.observacoes,
-        cep: form.cep,
-        endereco: form.endereco,
-        numero: form.numero,
-        complemento: form.complemento,
-        complementoEndereco: form.complementoEndereco,
-        bairro: form.bairro,
-        cidade: form.cidade,
-        estado: form.estado,
-      };
-
-      const { error } = await supabase.from("clients").insert([payload]);
-
-      if (error) throw error;
-
-      alert("Cliente importado com sucesso!");
-
-      const importedData = { ...form };
-
-      setForm(emptyClient);
-      setImageFile(null);
-      setPreviewUrl("");
-      setHasExtraction(false);
-      setCpfError("");
-
-      if (onConfirmImport) {
-        onConfirmImport(importedData);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao importar cliente");
-    }
-  };
+  } catch (err) {
+    console.error(err);
+    setImportError("Erro ao importar cliente.");
+  }
+};
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
@@ -356,13 +447,31 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
                   />
                 </div>
 
-                <div className="grid gap-2">
-                  <Label>CEP</Label>
-                  <Input
-                    value={form.cep}
-                    onChange={(e) => updateField("cep", e.target.value)}
-                  />
-                </div>
+              <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end md:col-span-2">
+  <div className="grid gap-2">
+    <Label>CEP</Label>
+    <Input
+      value={form.cep}
+      onChange={(e) => {
+        updateField("cep", formatCep(e.target.value));
+        if (cepError) setCepError("");
+      }}
+      placeholder="00000-000"
+      maxLength={9}
+    />
+  </div>
+
+  <Button
+    type="button"
+    variant="outline"
+    onClick={buscarCep}
+    disabled={cepLoading}
+  >
+    {cepLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+    Buscar CEP
+  </Button>
+</div>
+                {cepError && <p className="text-sm text-red-600 md:col-span-2">{cepError}</p>}
 
                 <div className="grid gap-2">
                   <Label>Bairro</Label>
@@ -429,7 +538,11 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
                   />
                 </div>
               </div>
-
+{importError && (
+  <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    {importError}
+  </div>
+)}
               <div className="flex flex-wrap gap-2 pt-2">
                 <Button
                   type="button"
