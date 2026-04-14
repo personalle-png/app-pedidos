@@ -141,7 +141,7 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
     setImportError("");
   };
 
-  const preprocessImageForOCR = (file) =>
+ const preprocessImageForOCR = (file) =>
   new Promise((resolve, reject) => {
     const img = new Image();
     const reader = new FileReader();
@@ -153,18 +153,35 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
     reader.onerror = reject;
 
     img.onload = () => {
-      const scale = 2;
+      // recorte da área central da ficha
+      const cropX = img.width * 0.16;
+      const cropY = img.height * 0.18;
+      const cropW = img.width * 0.70;
+      const cropH = img.height * 0.62;
+
+      const scale = 3;
+
       const canvas = document.createElement("canvas");
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
+      canvas.width = cropW * scale;
+      canvas.height = cropH * scale;
 
       const ctx = canvas.getContext("2d");
       if (!ctx) {
-        reject(new Error("Não foi possível criar o canvas."));
+        reject(new Error("Não foi possível criar canvas."));
         return;
       }
 
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(
+        img,
+        cropX,
+        cropY,
+        cropW,
+        cropH,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
@@ -174,13 +191,13 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
         const g = data[i + 1];
         const b = data[i + 2];
 
-        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+        let gray = 0.299 * r + 0.587 * g + 0.114 * b;
 
-        const boosted = gray > 180 ? 255 : gray < 110 ? 0 : gray;
+        gray = gray > 170 ? 255 : gray < 120 ? 0 : gray;
 
-        data[i] = boosted;
-        data[i + 1] = boosted;
-        data[i + 2] = boosted;
+        data[i] = gray;
+        data[i + 1] = gray;
+        data[i + 2] = gray;
       }
 
       ctx.putImageData(imageData, 0, 0);
