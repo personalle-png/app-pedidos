@@ -18,6 +18,7 @@ const emptyClient = {
   bairro: "",
   cidade: "",
   estado: "",
+  rawText: "",
 };
 
 function Card({ children, className = "" }) {
