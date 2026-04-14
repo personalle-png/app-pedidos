@@ -536,6 +536,12 @@ const verificarDuplicidade = async () => {
                   />
                 </div>
               </div>
+              {form.rawText && (
+  <div className="rounded-2xl bg-slate-50 p-4">
+    <p className="mb-2 text-sm font-medium text-slate-700">Texto lido da imagem</p>
+    <pre className="whitespace-pre-wrap text-xs text-slate-600">{form.rawText}</pre>
+  </div>
+)}
 {importError && (
   <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
     {importError}
