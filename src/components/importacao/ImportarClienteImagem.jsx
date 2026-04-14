@@ -145,13 +145,9 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
       const { error } = await supabase.from("clients").insert([
         {
           nome: form.nome,
-          telefone: form.telefone,
-          celular: form.celular,
+          telefone: form.celular,
           email: form.email,
-          profissao: form.profissao,
           empresa: form.empresa,
-          dataNascimento: form.dataNascimento || null,
-          observacoes: form.observacoes,
           cep: form.cep,
           endereco: form.endereco,
           numero: form.numero,
