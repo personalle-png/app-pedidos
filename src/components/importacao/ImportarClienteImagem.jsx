@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Upload, Image as ImageIcon, Loader2, CheckCircle2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
-import { parseClienteFromOCR } from "../../utils/importacaoClienteParser";
+
 
 const emptyClient = {
   nome: "",
@@ -295,28 +295,23 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
   setCpfError("");
 
   try {
-    const clienteCanvas = await preprocessImageSection(imageFile, "cliente");
-    const enderecoCanvas = await preprocessImageSection(imageFile, "endereco");
+    const formData = new FormData();
+    formData.append("file", imageFile);
 
-    const [clienteResult, enderecoResult] = await Promise.all([
-      Tesseract.recognize(clienteCanvas, "por+eng", {
-        logger: () => {},
-      }),
-      Tesseract.recognize(enderecoCanvas, "por+eng", {
-        logger: () => {},
-      }),
-    ]);
+    const response = await fetch("/api/importar-cliente-imagem", {
+      method: "POST",
+      body: formData,
+    });
 
-    const textoCliente = clienteResult?.data?.text || "";
-    const textoEndereco = enderecoResult?.data?.text || "";
-    const textoLido = `${textoCliente}\n${textoEndereco}`;
+    if (!response.ok) {
+      throw new Error("Não foi possível analisar a imagem.");
+    }
 
-    const extracted = parseClienteFromOCR(textoLido);
+    const extracted = await response.json();
 
     setForm((current) => ({
       ...current,
       ...extracted,
-      rawText: textoLido,
     }));
 
     setHasExtraction(true);
