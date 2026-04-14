@@ -296,14 +296,22 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
   setCpfError("");
 
   try {
-    const processedCanvas = await preprocessImageForOCR(imageFile);
+    const clienteCanvas = await preprocessImageSection(imageFile, "cliente");
+    const enderecoCanvas = await preprocessImageSection(imageFile, "endereco");
 
-    const result = await Tesseract.recognize(processedCanvas, "por+eng", {
-      logger: () => {},
-      tessedit_pageseg_mode: 6,
-    });
+    const [clienteResult, enderecoResult] = await Promise.all([
+      Tesseract.recognize(clienteCanvas, "por+eng", {
+        logger: () => {},
+      }),
+      Tesseract.recognize(enderecoCanvas, "por+eng", {
+        logger: () => {},
+      }),
+    ]);
 
-    const textoLido = result?.data?.text || "";
+    const textoCliente = clienteResult?.data?.text || "";
+    const textoEndereco = enderecoResult?.data?.text || "";
+    const textoLido = `${textoCliente}\n${textoEndereco}`;
+
     const extracted = parseClienteFromOCR(textoLido);
 
     setForm((current) => ({
