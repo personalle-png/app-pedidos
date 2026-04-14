@@ -287,7 +287,7 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
     reader.readAsDataURL(file);
   });
   
- const handleReadImage = async () => {
+const handleReadImage = async () => {
   if (!imageFile) return;
 
   setProcessing(true);
@@ -303,7 +303,14 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
       body: formData,
     });
 
-    const data = await response.json();
+    const responseText = await response.text();
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      throw new Error(responseText || "Resposta inválida da rota.");
+    }
 
     if (!response.ok) {
       throw new Error(data?.error || "Não foi possível analisar a imagem.");
