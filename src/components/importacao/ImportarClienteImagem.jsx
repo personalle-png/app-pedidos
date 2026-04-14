@@ -4,16 +4,14 @@ import { supabase } from "../../lib/supabase";
 
 const emptyClient = {
   nome: "",
+  cpf: "",
   telefone: "",
-  celular: "",
   email: "",
-  profissao: "",
-  empresa: "",
-  dataNascimento: "",
   observacoes: "",
   cep: "",
   endereco: "",
   numero: "",
+  complemento: "",
   complementoEndereco: "",
   bairro: "",
   cidade: "",
@@ -66,32 +64,51 @@ function Button({ children, variant = "default", className = "", ...props }) {
   );
 }
 
-function formatDateFromShort(value) {
-  if (!value) return "";
-  const raw = String(value).trim();
+function formatCpf(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+}
 
-  if (/^\d{2}\/\d{2}$/.test(raw)) {
-    const year = new Date().getFullYear();
-    const [day, month] = raw.split("/");
-    return `${year}-${month}-${day}`;
+function isValidCpf(value) {
+  const cpf = String(value || "").replace(/\D/g, "");
+
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 9; i += 1) {
+    sum += Number(cpf[i]) * (10 - i);
   }
 
-  return raw;
+  let check1 = (sum * 10) % 11;
+  if (check1 === 10) check1 = 0;
+  if (check1 !== Number(cpf[9])) return false;
+
+  sum = 0;
+  for (let i = 0; i < 10; i += 1) {
+    sum += Number(cpf[i]) * (11 - i);
+  }
+
+  let check2 = (sum * 10) % 11;
+  if (check2 === 10) check2 = 0;
+
+  return check2 === Number(cpf[10]);
 }
 
 function fakeExtractFromImage() {
   return {
     nome: "Rosana Rodrigues de Oliveira",
-    telefone: "",
-    celular: "(11) 99493-7899",
+    cpf: "",
+    telefone: "(11) 99493-7899",
     email: "rosanoliveirabr@yahoo.com.br",
-    profissao: "",
-    empresa: "",
-    dataNascimento: formatDateFromShort("03/05"),
     observacoes: "",
     cep: "05628-050",
     endereco: "R Gen Elides de S Queides",
     numero: "28",
+    complemento: "",
     complementoEndereco: "Apto 134",
     bairro: "Jardim Colombo",
     cidade: "São Paulo",
@@ -105,6 +122,7 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
   const [form, setForm] = useState(emptyClient);
   const [processing, setProcessing] = useState(false);
   const [hasExtraction, setHasExtraction] = useState(false);
+  const [cpfError, setCpfError] = useState("");
 
   const imageName = useMemo(
     () => imageFile?.name || "Nenhuma imagem selecionada",
@@ -130,33 +148,51 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
     setProcessing(true);
 
     try {
-      // TODO: substituir por chamada real ao backend/OCR
+      // TODO: substituir por leitura real da imagem
       await new Promise((resolve) => setTimeout(resolve, 900));
       const extracted = fakeExtractFromImage();
       setForm((current) => ({ ...current, ...extracted }));
       setHasExtraction(true);
+      setCpfError("");
     } finally {
       setProcessing(false);
     }
   };
 
   const handleConfirm = async () => {
+    if (!form.nome?.trim()) {
+      alert("Preencha o nome do cliente.");
+      return;
+    }
+
+    if (!form.cpf?.trim()) {
+      setCpfError("Digite o CPF antes de confirmar.");
+      return;
+    }
+
+    if (!isValidCpf(form.cpf)) {
+      setCpfError("Digite um CPF válido.");
+      return;
+    }
+
     try {
-      const { error } = await supabase.from("clients").insert([
-        {
-          nome: form.nome,
-          telefone: form.celular,
-          email: form.email,
-          empresa: form.empresa,
-          cep: form.cep,
-          endereco: form.endereco,
-          numero: form.numero,
-          complementoEndereco: form.complementoEndereco,
-          bairro: form.bairro,
-          cidade: form.cidade,
-          estado: form.estado,
-        },
-      ]);
+      const payload = {
+        nome: form.nome,
+        cpf: form.cpf,
+        telefone: form.telefone,
+        email: form.email,
+        observacoes: form.observacoes,
+        cep: form.cep,
+        endereco: form.endereco,
+        numero: form.numero,
+        complemento: form.complemento,
+        complementoEndereco: form.complementoEndereco,
+        bairro: form.bairro,
+        cidade: form.cidade,
+        estado: form.estado,
+      };
+
+      const { error } = await supabase.from("clients").insert([payload]);
 
       if (error) throw error;
 
@@ -168,6 +204,7 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
       setImageFile(null);
       setPreviewUrl("");
       setHasExtraction(false);
+      setCpfError("");
 
       if (onConfirmImport) {
         onConfirmImport(importedData);
@@ -253,6 +290,7 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
                     setPreviewUrl("");
                     setForm(emptyClient);
                     setHasExtraction(false);
+                    setCpfError("");
                   }}
                 >
                   Limpar
@@ -288,6 +326,20 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
                   />
                 </div>
 
+                <div className="grid gap-2 md:col-span-2">
+                  <Label>CPF</Label>
+                  <Input
+                    value={form.cpf}
+                    onChange={(e) => {
+                      updateField("cpf", formatCpf(e.target.value));
+                      if (cpfError) setCpfError("");
+                    }}
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                  />
+                  {cpfError && <p className="text-sm text-red-600">{cpfError}</p>}
+                </div>
+
                 <div className="grid gap-2">
                   <Label>Telefone</Label>
                   <Input
@@ -297,14 +349,6 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label>Celular</Label>
-                  <Input
-                    value={form.celular}
-                    onChange={(e) => updateField("celular", e.target.value)}
-                  />
-                </div>
-
-                <div className="grid gap-2 md:col-span-2">
                   <Label>E-mail</Label>
                   <Input
                     value={form.email}
@@ -313,35 +357,18 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label>Profissão</Label>
-                  <Input
-                    value={form.profissao}
-                    onChange={(e) => updateField("profissao", e.target.value)}
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label>Empresa</Label>
-                  <Input
-                    value={form.empresa}
-                    onChange={(e) => updateField("empresa", e.target.value)}
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label>Data de nascimento</Label>
-                  <Input
-                    type="date"
-                    value={form.dataNascimento}
-                    onChange={(e) => updateField("dataNascimento", e.target.value)}
-                  />
-                </div>
-
-                <div className="grid gap-2">
                   <Label>CEP</Label>
                   <Input
                     value={form.cep}
                     onChange={(e) => updateField("cep", e.target.value)}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>Bairro</Label>
+                  <Input
+                    value={form.bairro}
+                    onChange={(e) => updateField("bairro", e.target.value)}
                   />
                 </div>
 
@@ -362,18 +389,18 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
                 </div>
 
                 <div className="grid gap-2">
+                  <Label>Complemento</Label>
+                  <Input
+                    value={form.complemento}
+                    onChange={(e) => updateField("complemento", e.target.value)}
+                  />
+                </div>
+
+                <div className="grid gap-2 md:col-span-2">
                   <Label>Complemento do endereço</Label>
                   <Input
                     value={form.complementoEndereco}
                     onChange={(e) => updateField("complementoEndereco", e.target.value)}
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label>Bairro</Label>
-                  <Input
-                    value={form.bairro}
-                    onChange={(e) => updateField("bairro", e.target.value)}
                   />
                 </div>
 
@@ -385,7 +412,7 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
                   />
                 </div>
 
-                <div className="grid gap-2 md:col-span-2">
+                <div className="grid gap-2">
                   <Label>Estado</Label>
                   <Input
                     value={form.estado}
