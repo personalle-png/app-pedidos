@@ -221,6 +221,7 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
 
     const result = await Tesseract.recognize(processedCanvas, "por+eng", {
       logger: () => {},
+      tessedit_pageseg_mode: 6,
     });
 
     const textoLido = result?.data?.text || "";
