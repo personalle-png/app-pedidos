@@ -38,14 +38,29 @@ function limparCampo(valor) {
 }
 
 function extrairDepoisDoRotulo(texto, rotulo) {
-  const linhas = texto.split("\n").map((l) => l.trim()).filter(Boolean);
+  const linhas = texto
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
 
   for (let i = 0; i < linhas.length; i += 1) {
     const linha = linhas[i];
 
     if (rotulo.test(linha)) {
-      const semRotulo = limparCampo(linha.replace(rotulo, ""));
-      if (semRotulo) return semRotulo;
+      let semRotulo = limparCampo(linha.replace(rotulo, ""));
+
+      semRotulo = semRotulo
+        .replace(/buscar nos correios/i, "")
+        .replace(/^[-:=>'"*]+/, "")
+        .trim();
+
+      if (
+        semRotulo &&
+        !/^sim|não$/i.test(semRotulo) &&
+        semRotulo.length > 1
+      ) {
+        return semRotulo;
+      }
 
       if (linhas[i + 1]) {
         return limparCampo(linhas[i + 1]);
