@@ -141,6 +141,85 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
     setImportError("");
   };
 
+  const preprocessImageSection = (file, section) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      img.src = reader.result;
+    };
+
+    reader.onerror = reject;
+
+    img.onload = () => {
+      let cropX = 0;
+      let cropY = 0;
+      let cropW = 0;
+      let cropH = 0;
+
+      if (section === "cliente") {
+        cropX = img.width * 0.16;
+        cropY = img.height * 0.16;
+        cropW = img.width * 0.70;
+        cropH = img.height * 0.34;
+      }
+
+      if (section === "endereco") {
+        cropX = img.width * 0.16;
+        cropY = img.height * 0.50;
+        cropW = img.width * 0.70;
+        cropH = img.height * 0.22;
+      }
+
+      const scale = 3;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = cropW * scale;
+      canvas.height = cropH * scale;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Não foi possível criar canvas."));
+        return;
+      }
+
+      ctx.drawImage(
+        img,
+        cropX,
+        cropY,
+        cropW,
+        cropH,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        let gray = 0.299 * r + 0.587 * g + 0.114 * b;
+        gray = gray > 170 ? 255 : gray < 120 ? 0 : gray;
+
+        data[i] = gray;
+        data[i + 1] = gray;
+        data[i + 2] = gray;
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      resolve(canvas);
+    };
+
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
  const preprocessImageForOCR = (file) =>
   new Promise((resolve, reject) => {
     const img = new Image();
