@@ -141,34 +141,88 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
     setImportError("");
   };
 
+  const preprocessImageForOCR = (file) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      img.src = reader.result;
+    };
+
+    reader.onerror = reject;
+
+    img.onload = () => {
+      const scale = 2;
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Não foi possível criar o canvas."));
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+
+        const boosted = gray > 180 ? 255 : gray < 110 ? 0 : gray;
+
+        data[i] = boosted;
+        data[i + 1] = boosted;
+        data[i + 2] = boosted;
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+
+      resolve(canvas);
+    };
+
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+  
   const handleReadImage = async () => {
-    if (!imageFile) return;
+  if (!imageFile) return;
 
-    setProcessing(true);
-    setImportError("");
-    setCpfError("");
+  setProcessing(true);
+  setImportError("");
+  setCpfError("");
 
-    try {
-      const result = await Tesseract.recognize(imageFile, "por+eng", {
-        logger: () => {},
-      });
+  try {
+    const processedCanvas = await preprocessImageForOCR(imageFile);
 
-      const textoLido = result?.data?.text || "";
-      const extracted = parseClienteFromOCR(textoLido);
+    const result = await Tesseract.recognize(processedCanvas, "por+eng", {
+      logger: () => {},
+    });
 
-      setForm((current) => ({
-        ...current,
-        ...extracted,
-      }));
+    const textoLido = result?.data?.text || "";
+    const extracted = parseClienteFromOCR(textoLido);
 
-      setHasExtraction(true);
-    } catch (err) {
-      console.error(err);
-      setImportError("Não foi possível ler a imagem.");
-    } finally {
-      setProcessing(false);
-    }
-  };
+    setForm((current) => ({
+      ...current,
+      ...extracted,
+      rawText: textoLido,
+    }));
+
+    setHasExtraction(true);
+  } catch (err) {
+    console.error(err);
+    setImportError("Não foi possível ler a imagem.");
+  } finally {
+    setProcessing(false);
+  }
+};
 
   const buscarCep = async () => {
     const cepLimpo = String(form.cep || "").replace(/\D/g, "");
