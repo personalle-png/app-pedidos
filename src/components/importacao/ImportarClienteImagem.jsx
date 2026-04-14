@@ -21,7 +21,11 @@ const emptyClient = {
 };
 
 function Card({ children, className = "" }) {
-  return <div className={`rounded-3xl border border-slate-200 bg-white shadow-sm ${className}`}>{children}</div>;
+  return (
+    <div className={`rounded-3xl border border-slate-200 bg-white shadow-sm ${className}`}>
+      {children}
+    </div>
+  );
 }
 
 function Input({ className = "", ...props }) {
@@ -65,11 +69,13 @@ function Button({ children, variant = "default", className = "", ...props }) {
 function formatDateFromShort(value) {
   if (!value) return "";
   const raw = String(value).trim();
+
   if (/^\d{2}\/\d{2}$/.test(raw)) {
     const year = new Date().getFullYear();
     const [day, month] = raw.split("/");
     return `${year}-${month}-${day}`;
   }
+
   return raw;
 }
 
@@ -100,13 +106,24 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
   const [processing, setProcessing] = useState(false);
   const [hasExtraction, setHasExtraction] = useState(false);
 
-  const imageName = useMemo(() => imageFile?.name || "Nenhuma imagem selecionada", [imageFile]);
+  const imageName = useMemo(
+    () => imageFile?.name || "Nenhuma imagem selecionada",
+    [imageFile]
+  );
 
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const handleConfirm = async () => {
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setImageFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setHasExtraction(false);
+  };
+
   const handleReadImage = async () => {
     if (!imageFile) return;
 
@@ -124,50 +141,54 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
   };
 
   const handleConfirm = async () => {
-  try {
-    const { error } = await supabase.from("clients").insert([
-      {
-        nome: form.nome,
-        telefone: form.telefone,
-        celular: form.celular,
-        email: form.email,
-        profissao: form.profissao,
-        empresa: form.empresa,
-        dataNascimento: form.dataNascimento,
-        observacoes: form.observacoes,
-        cep: form.cep,
-        endereco: form.endereco,
-        numero: form.numero,
-        complementoEndereco: form.complementoEndereco,
-        bairro: form.bairro,
-        cidade: form.cidade,
-        estado: form.estado,
-      },
-    ]);
+    try {
+      const { error } = await supabase.from("clients").insert([
+        {
+          nome: form.nome,
+          telefone: form.telefone,
+          celular: form.celular,
+          email: form.email,
+          profissao: form.profissao,
+          empresa: form.empresa,
+          dataNascimento: form.dataNascimento || null,
+          observacoes: form.observacoes,
+          cep: form.cep,
+          endereco: form.endereco,
+          numero: form.numero,
+          complementoEndereco: form.complementoEndereco,
+          bairro: form.bairro,
+          cidade: form.cidade,
+          estado: form.estado,
+        },
+      ]);
 
-    if (error) throw error;
+      if (error) throw error;
 
-    alert("Cliente importado com sucesso!");
+      alert("Cliente importado com sucesso!");
 
-    setForm(emptyClient);
-    setImageFile(null);
-    setPreviewUrl("");
-    setHasExtraction(false);
+      const importedData = { ...form };
 
-    if (onConfirmImport) {
-      onConfirmImport(form);
+      setForm(emptyClient);
+      setImageFile(null);
+      setPreviewUrl("");
+      setHasExtraction(false);
+
+      if (onConfirmImport) {
+        onConfirmImport(importedData);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao importar cliente");
     }
-  } catch (err) {
-    console.error(err);
-    alert("Erro ao importar cliente");
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Importar cliente por imagem</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+            Importar cliente por imagem
+          </h1>
           <p className="mt-1 text-slate-600">
             Envie um JPG ou PNG, revise os dados lidos e confirme a importação.
           </p>
@@ -177,7 +198,9 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
           <Card>
             <div className="p-6 space-y-4">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">Imagem do cadastro</h2>
+                <h2 className="text-xl font-semibold text-slate-900">
+                  Imagem do cadastro
+                </h2>
                 <p className="mt-1 text-sm text-slate-500">
                   O sistema lê os dados da imagem e preenche o formulário para revisão.
                 </p>
@@ -185,15 +208,27 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
 
               <label className="flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center hover:bg-slate-100">
                 {previewUrl ? (
-                  <img src={previewUrl} alt="Prévia do cadastro" className="max-h-[320px] rounded-2xl object-contain" />
+                  <img
+                    src={previewUrl}
+                    alt="Prévia do cadastro"
+                    className="max-h-[320px] rounded-2xl object-contain"
+                  />
                 ) : (
                   <>
                     <ImageIcon className="h-10 w-10 text-slate-400" />
-                    <p className="mt-3 font-medium text-slate-700">Clique para selecionar a imagem</p>
+                    <p className="mt-3 font-medium text-slate-700">
+                      Clique para selecionar a imagem
+                    </p>
                     <p className="mt-1 text-sm text-slate-500">JPG ou PNG</p>
                   </>
                 )}
-                <input type="file" accept="image/png,image/jpeg,image/jpg" className="hidden" onChange={handleFileChange} />
+
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
               </label>
 
               <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
@@ -201,8 +236,16 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <Button type="button" onClick={handleReadImage} disabled={!imageFile || processing}>
-                  {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                <Button
+                  type="button"
+                  onClick={handleReadImage}
+                  disabled={!imageFile || processing}
+                >
+                  {processing ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="mr-2 h-4 w-4" />
+                  )}
                   Ler imagem
                 </Button>
 
@@ -232,7 +275,9 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
           <Card>
             <div className="p-6 space-y-5">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">Revisão dos dados</h2>
+                <h2 className="text-xl font-semibold text-slate-900">
+                  Revisão dos dados
+                </h2>
                 <p className="mt-1 text-sm text-slate-500">
                   Ajuste qualquer campo antes de confirmar a importação.
                 </p>
@@ -241,84 +286,136 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="grid gap-2 md:col-span-2">
                   <Label>Nome</Label>
-                  <Input value={form.nome} onChange={(e) => updateField("nome", e.target.value)} />
+                  <Input
+                    value={form.nome}
+                    onChange={(e) => updateField("nome", e.target.value)}
+                  />
                 </div>
 
                 <div className="grid gap-2">
                   <Label>Telefone</Label>
-                  <Input value={form.telefone} onChange={(e) => updateField("telefone", e.target.value)} />
+                  <Input
+                    value={form.telefone}
+                    onChange={(e) => updateField("telefone", e.target.value)}
+                  />
                 </div>
 
                 <div className="grid gap-2">
                   <Label>Celular</Label>
-                  <Input value={form.celular} onChange={(e) => updateField("celular", e.target.value)} />
+                  <Input
+                    value={form.celular}
+                    onChange={(e) => updateField("celular", e.target.value)}
+                  />
                 </div>
 
                 <div className="grid gap-2 md:col-span-2">
                   <Label>E-mail</Label>
-                  <Input value={form.email} onChange={(e) => updateField("email", e.target.value)} />
+                  <Input
+                    value={form.email}
+                    onChange={(e) => updateField("email", e.target.value)}
+                  />
                 </div>
 
                 <div className="grid gap-2">
                   <Label>Profissão</Label>
-                  <Input value={form.profissao} onChange={(e) => updateField("profissao", e.target.value)} />
+                  <Input
+                    value={form.profissao}
+                    onChange={(e) => updateField("profissao", e.target.value)}
+                  />
                 </div>
 
                 <div className="grid gap-2">
                   <Label>Empresa</Label>
-                  <Input value={form.empresa} onChange={(e) => updateField("empresa", e.target.value)} />
+                  <Input
+                    value={form.empresa}
+                    onChange={(e) => updateField("empresa", e.target.value)}
+                  />
                 </div>
 
                 <div className="grid gap-2">
                   <Label>Data de nascimento</Label>
-                  <Input type="date" value={form.dataNascimento} onChange={(e) => updateField("dataNascimento", e.target.value)} />
+                  <Input
+                    type="date"
+                    value={form.dataNascimento}
+                    onChange={(e) => updateField("dataNascimento", e.target.value)}
+                  />
                 </div>
 
                 <div className="grid gap-2">
                   <Label>CEP</Label>
-                  <Input value={form.cep} onChange={(e) => updateField("cep", e.target.value)} />
+                  <Input
+                    value={form.cep}
+                    onChange={(e) => updateField("cep", e.target.value)}
+                  />
                 </div>
 
                 <div className="grid gap-2 md:col-span-2">
                   <Label>Endereço</Label>
-                  <Input value={form.endereco} onChange={(e) => updateField("endereco", e.target.value)} />
+                  <Input
+                    value={form.endereco}
+                    onChange={(e) => updateField("endereco", e.target.value)}
+                  />
                 </div>
 
                 <div className="grid gap-2">
                   <Label>Número</Label>
-                  <Input value={form.numero} onChange={(e) => updateField("numero", e.target.value)} />
+                  <Input
+                    value={form.numero}
+                    onChange={(e) => updateField("numero", e.target.value)}
+                  />
                 </div>
 
                 <div className="grid gap-2">
                   <Label>Complemento do endereço</Label>
-                  <Input value={form.complementoEndereco} onChange={(e) => updateField("complementoEndereco", e.target.value)} />
+                  <Input
+                    value={form.complementoEndereco}
+                    onChange={(e) => updateField("complementoEndereco", e.target.value)}
+                  />
                 </div>
 
                 <div className="grid gap-2">
                   <Label>Bairro</Label>
-                  <Input value={form.bairro} onChange={(e) => updateField("bairro", e.target.value)} />
+                  <Input
+                    value={form.bairro}
+                    onChange={(e) => updateField("bairro", e.target.value)}
+                  />
                 </div>
 
                 <div className="grid gap-2">
                   <Label>Cidade</Label>
-                  <Input value={form.cidade} onChange={(e) => updateField("cidade", e.target.value)} />
+                  <Input
+                    value={form.cidade}
+                    onChange={(e) => updateField("cidade", e.target.value)}
+                  />
                 </div>
 
                 <div className="grid gap-2 md:col-span-2">
                   <Label>Estado</Label>
-                  <Input value={form.estado} onChange={(e) => updateField("estado", e.target.value)} />
+                  <Input
+                    value={form.estado}
+                    onChange={(e) => updateField("estado", e.target.value)}
+                  />
                 </div>
 
                 <div className="grid gap-2 md:col-span-2">
                   <Label>Observações</Label>
-                  <Textarea rows={4} value={form.observacoes} onChange={(e) => updateField("observacoes", e.target.value)} />
+                  <Textarea
+                    rows={4}
+                    value={form.observacoes}
+                    onChange={(e) => updateField("observacoes", e.target.value)}
+                  />
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-2 pt-2">
-                <Button type="button" onClick={handleConfirm} disabled={!hasExtraction}>
+                <Button
+                  type="button"
+                  onClick={handleConfirm}
+                  disabled={!hasExtraction}
+                >
                   Confirmar importação
                 </Button>
+
                 <Button type="button" variant="outline">
                   Salvar como rascunho
                 </Button>
