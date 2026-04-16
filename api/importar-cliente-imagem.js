@@ -37,20 +37,14 @@ function buildPrompt(tipo) {
     return (
       "Você receberá 2 imagens do mesmo cliente importado do Elo7.\n\n" +
 
-      "PASSO 1:\n" +
-      "Leia cuidadosamente a IMAGEM 1.\n" +
-      "Procure especificamente pelo campo rotulado como 'CPF do comprador'.\n" +
-      "Extraia apenas o número que estiver ao lado desse rótulo.\n" +
-      "Não use outros números da tela como CPF.\n" +
-      "Se houver dúvida, devolva string vazia em vez de inventar.\n\n" +
+      "A IMAGEM 1 contém os dados principais e pode conter CPF e celular.\n" +
+      "A IMAGEM 2 complementa endereço e outros dados.\n\n" +
 
-      "PASSO 2:\n" +
-      "Leia a IMAGEM 2 para complementar os demais dados.\n\n" +
-
-      "REGRAS IMPORTANTES:\n" +
-      "- Sempre priorize a IMAGEM 1.\n" +
-      "- O CPF deve vir somente do campo 'CPF do comprador'.\n" +
-      "- Ignore identificador, CEP, telefone, códigos de pedido e qualquer outro número.\n" +
+      "REGRAS:\n" +
+      "- Sempre priorize a IMAGEM 1 quando houver conflito.\n" +
+      "- Se houver celular, coloque esse valor no campo telefone.\n" +
+      "- O campo complemento deve ficar vazio, a menos que exista um complemento de CEP.\n" +
+      "- Apartamento, bloco, casa, sala e informações do endereço devem ir em complementoEndereco.\n" +
       "- Extraia somente os campos: nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado.\n" +
       "- Não invente dados. Se não souber, devolva string vazia."
     );
@@ -58,8 +52,10 @@ function buildPrompt(tipo) {
 
   return (
     "Você receberá 1 imagem de cliente importado da Loja Integrada.\n" +
+    "Se houver celular, coloque esse valor no campo telefone.\n" +
+    "O campo complemento deve ficar vazio, a menos que exista um complemento de CEP.\n" +
+    "Apartamento, bloco, casa, sala e informações do endereço devem ir em complementoEndereco.\n" +
     "Extraia somente os campos: nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado.\n" +
-    "O CPF deve vir somente do campo explicitamente rotulado como CPF.\n" +
     "Não invente dados. Se não souber, devolva string vazia."
   );
 }
@@ -174,6 +170,18 @@ export default async function handler(req, res) {
     // move para complementoEndereco
     if (!parsed.complementoEndereco && parsed.complemento) {
       parsed.complementoEndereco = parsed.complemento;
+      parsed.complemento = "";
+    }
+
+    const complementoTexto = String(parsed.complemento || "").toLowerCase();
+
+    if (
+      complementoTexto &&
+      /ap|apto|apart|bloco|casa|fundos|sala|lote|quadra/.test(complementoTexto)
+    ) {
+      if (!parsed.complementoEndereco) {
+        parsed.complementoEndereco = parsed.complemento;
+      }
       parsed.complemento = "";
     }
     
