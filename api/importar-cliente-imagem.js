@@ -10,8 +10,11 @@ function buildPrompt(tipo) {
   if (tipo === "elo7") {
     return (
       "Você receberá 2 imagens do mesmo cliente importado do Elo7. " +
+      "A IMAGEM 1 contém os dados principais e pode conter o CPF. " +
+      "A IMAGEM 2 complementa o cadastro com outros dados. " +
       "Combine os dados das duas imagens em um único cadastro. " +
-      "Priorize os dados da imagem 1 quando houver conflito. " +
+      "Sempre priorize a IMAGEM 1 quando houver conflito. " +
+      "Se o CPF aparecer na IMAGEM 1, preencha o campo cpf com esse valor. " +
       "Extraia somente os campos: nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado. " +
       "Não invente dados. Se não souber, devolva string vazia."
     );
