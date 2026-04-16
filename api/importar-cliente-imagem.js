@@ -16,6 +16,41 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Imagem não enviada." });
     }
 
+    const schema = {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        nome: { type: "string" },
+        cpf: { type: "string" },
+        telefone: { type: "string" },
+        email: { type: "string" },
+        observacoes: { type: "string" },
+        cep: { type: "string" },
+        endereco: { type: "string" },
+        numero: { type: "string" },
+        complemento: { type: "string" },
+        complementoEndereco: { type: "string" },
+        bairro: { type: "string" },
+        cidade: { type: "string" },
+        estado: { type: "string" }
+      },
+      required: [
+        "nome",
+        "cpf",
+        "telefone",
+        "email",
+        "observacoes",
+        "cep",
+        "endereco",
+        "numero",
+        "complemento",
+        "complementoEndereco",
+        "bairro",
+        "cidade",
+        "estado"
+      ]
+    };
+
     const response = await client.responses.create({
       model: "gpt-4.1-mini",
       input: [
@@ -25,57 +60,36 @@ export default async function handler(req, res) {
             {
               type: "input_text",
               text:
-                "Leia esta ficha de cliente em português do Brasil e devolva somente JSON válido com estes campos: " +
-                "nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado. " +
-                "Não invente dados. Se não souber, devolva string vazia. " +
-                "Sempre devolva cpf vazio.",
+                "Leia esta ficha de cliente em português do Brasil e extraia somente os campos do schema. " +
+                "Não invente dados. Se não conseguir ler um campo, devolva string vazia. " +
+                "Sempre devolva cpf vazio. " +
+                "Use o celular como telefone principal quando ele existir."
             },
             {
               type: "input_image",
-              image_url: image,
-            },
-          ],
-        },
+              image_url: image
+            }
+          ]
+        }
       ],
+      text: {
+        format: {
+          type: "json_schema",
+          name: "cliente_importacao",
+          strict: true,
+          schema
+        }
+      }
     });
 
-    const raw = response.output_text || "";
+    const parsed = JSON.parse(response.output_text || "{}");
 
-// remove ```json ... ```
-const clean = raw
-  .replace(/```json/g, "")
-  .replace(/```/g, "")
-  .trim();
-
-let parsed = {};
-
-try {
-  parsed = JSON.parse(clean);
-} catch {
-  parsed = {};
-}
-
-    return res.status(200).json({
-      nome: "",
-      cpf: "",
-      telefone: "",
-      email: "",
-      observacoes: "",
-      cep: "",
-      endereco: "",
-      numero: "",
-      complemento: "",
-      complementoEndereco: "",
-      bairro: "",
-      cidade: "",
-      estado: "",
-      rawText: text,
-    });
+    return res.status(200).json(parsed);
   } catch (error) {
     console.error("ERRO ROTA IMPORTAR CLIENTE:", error);
 
     return res.status(500).json({
-      error: error?.message || "Erro interno na função.",
+      error: error?.message || "Erro interno na função."
     });
   }
 }
