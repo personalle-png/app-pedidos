@@ -1,5 +1,60 @@
 import OpenAI from "openai";
 
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+
+function buildPrompt(tipo) {
+  if (tipo === "elo7") {
+    return (
+      "Você receberá 2 imagens do mesmo cliente importado do Elo7.\n\n" +
+      "A IMAGEM 1 contém os dados principais e pode conter CPF e celular.\n" +
+      "A IMAGEM 2 complementa endereço e outros dados.\n\n" +
+      "REGRAS:\n" +
+      "- Sempre priorize a IMAGEM 1 quando houver conflito.\n" +
+      "- Procure especificamente pelo campo rotulado como 'CPF do comprador'.\n" +
+      "- Extraia apenas o número que estiver ao lado desse rótulo.\n" +
+      "- Não use outros números da tela como CPF.\n" +
+      "- Se houver celular, coloque esse valor no campo telefone.\n" +
+      "- O campo complemento deve ficar vazio, a menos que exista um complemento de CEP.\n" +
+      "- Apartamento, bloco, casa, sala, fundos, lote e outras informações do endereço devem ir em complementoEndereco.\n" +
+      "- Extraia somente os campos: nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado.\n" +
+      "- Não invente dados. Se não souber, devolva string vazia."
+    );
+  }
+
+  return (
+    "Você receberá 1 imagem de cliente importado da Loja Integrada.\n\n" +
+    "REGRAS:\n" +
+    "- Procure especificamente pelo campo de CPF.\n" +
+    "- Se houver celular, coloque esse valor no campo telefone.\n" +
+    "- O campo complemento deve ficar vazio, a menos que exista um complemento de CEP.\n" +
+    "- Apartamento, bloco, casa, sala, fundos, lote e outras informações do endereço devem ir em complementoEndereco.\n" +
+    "- Extraia somente os campos: nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado.\n" +
+    "- Não invente dados. Se não souber, devolva string vazia."
+  );
+}
+
+function emptyResult() {
+  return {
+    nome: "",
+    cpf: "",
+    telefone: "",
+    email: "",
+    observacoes: "",
+    cep: "",
+    endereco: "",
+    numero: "",
+    complemento: "",
+    complementoEndereco: "",
+    bairro: "",
+    cidade: "",
+    estado: "",
+  };
+}
+
 function isValidCpf(cpf) {
   const clean = String(cpf || "").replace(/\D/g, "");
 
@@ -26,56 +81,69 @@ function isValidCpf(cpf) {
   return check2 === Number(clean[10]);
 }
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
-
-function buildPrompt(tipo) {
-  if (tipo === "elo7") {
-    return (
-      "Você receberá 2 imagens do mesmo cliente importado do Elo7.\n\n" +
-
-      "A IMAGEM 1 contém os dados principais e pode conter CPF e celular.\n" +
-      "A IMAGEM 2 complementa endereço e outros dados.\n\n" +
-
-      "REGRAS:\n" +
-      "- Sempre priorize a IMAGEM 1 quando houver conflito.\n" +
-      "- Se houver celular, coloque esse valor no campo telefone.\n" +
-      "- O campo complemento deve ficar vazio, a menos que exista um complemento de CEP.\n" +
-      "- Apartamento, bloco, casa, sala e informações do endereço devem ir em complementoEndereco.\n" +
-      "- Extraia somente os campos: nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado.\n" +
-      "- Não invente dados. Se não souber, devolva string vazia."
-    );
-  }
-
-  return (
-    "Você receberá 1 imagem de cliente importado da Loja Integrada.\n" +
-    "Se houver celular, coloque esse valor no campo telefone.\n" +
-    "O campo complemento deve ficar vazio, a menos que exista um complemento de CEP.\n" +
-    "Apartamento, bloco, casa, sala e informações do endereço devem ir em complementoEndereco.\n" +
-    "Extraia somente os campos: nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado.\n" +
-    "Não invente dados. Se não souber, devolva string vazia."
-  );
+function normalizePhone(value) {
+  return String(value || "").replace(/\D/g, "");
 }
 
-function emptyResult() {
-  return {
-    nome: "",
-    cpf: "",
-    telefone: "",
-    email: "",
-    observacoes: "",
-    cep: "",
-    endereco: "",
-    numero: "",
-    complemento: "",
-    complementoEndereco: "",
-    bairro: "",
-    cidade: "",
-    estado: ""
+function normalizeCep(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
+  if (digits.length !== 8) return "";
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
+function mergePreferFirst(primary = {}, secondary = {}) {
+  const result = { ...secondary, ...primary };
+
+  Object.keys(result).forEach((key) => {
+    const first = String(primary?.[key] ?? "").trim();
+    const second = String(secondary?.[key] ?? "").trim();
+    result[key] = first || second || "";
+  });
+
+  return result;
+}
+
+function postProcess(parsed) {
+  const result = {
+    ...emptyResult(),
+    ...parsed,
   };
+
+  result.cpf = String(result.cpf || "").replace(/\D/g, "");
+
+  if (!isValidCpf(result.cpf)) {
+    result.cpf = "";
+  }
+
+  if (!result.telefone && result.celular) {
+    result.telefone = result.celular;
+  }
+
+  result.telefone = normalizePhone(result.telefone);
+
+  const complementoTexto = String(result.complemento || "").trim();
+  const complementoEnderecoTexto = String(result.complementoEndereco || "").trim();
+
+  if (!complementoEnderecoTexto && complementoTexto) {
+    result.complementoEndereco = complementoTexto;
+    result.complemento = "";
+  }
+
+  const complementoNormalizado = String(result.complemento || "").toLowerCase();
+
+  if (
+    complementoNormalizado &&
+    /ap|apto|apart|bloco|casa|fundos|sala|lote|quadra|torre|andar/.test(complementoNormalizado)
+  ) {
+    if (!result.complementoEndereco) {
+      result.complementoEndereco = result.complemento;
+    }
+    result.complemento = "";
+  }
+
+  result.cep = normalizeCep(result.cep);
+
+  return result;
 }
 
 export default async function handler(req, res) {
@@ -117,7 +185,7 @@ export default async function handler(req, res) {
         complementoEndereco: { type: "string" },
         bairro: { type: "string" },
         cidade: { type: "string" },
-        estado: { type: "string" }
+        estado: { type: "string" },
       },
       required: [
         "nome",
@@ -132,8 +200,8 @@ export default async function handler(req, res) {
         "complementoEndereco",
         "bairro",
         "cidade",
-        "estado"
-      ]
+        "estado",
+      ],
     };
 
     const response = await client.responses.create({
@@ -155,45 +223,9 @@ export default async function handler(req, res) {
     });
 
     const parsed = JSON.parse(response.output_text || JSON.stringify(emptyResult()));
+    const finalData = postProcess(parsed);
 
-    parsed.cpf = parsed.cpf?.replace(/\D/g, "") || "";
-
-    // se telefone vier vazio, tenta aproveitar celular/telefone em campos alternativos
-    if (!parsed.telefone && parsed.celular) {
-      parsed.telefone = parsed.celular;
-    }
-    
-    // normaliza telefone
-    parsed.telefone = parsed.telefone?.replace(/\D/g, "") || "";
-    
-    // se o modelo colocou complemento do endereço no campo errado,
-    // move para complementoEndereco
-    if (!parsed.complementoEndereco && parsed.complemento) {
-      parsed.complementoEndereco = parsed.complemento;
-      parsed.complemento = "";
-    }
-
-    const complementoTexto = String(parsed.complemento || "").toLowerCase();
-
-    if (
-      complementoTexto &&
-      /ap|apto|apart|bloco|casa|fundos|sala|lote|quadra/.test(complementoTexto)
-    ) {
-      if (!parsed.complementoEndereco) {
-        parsed.complementoEndereco = parsed.complemento;
-      }
-      parsed.complemento = "";
-    }
-    
-
-    if (!isValidCpf(parsed.cpf)) {
-      parsed.cpf = "";
-    }
-
-    return res.status(200).json({
-      ...emptyResult(),
-      ...parsed
-    });
+    return res.status(200).json(finalData);
   } catch (error) {
     console.error("ERRO ROTA IMPORTAR CLIENTE:", error);
 
