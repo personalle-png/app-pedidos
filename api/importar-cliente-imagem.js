@@ -162,6 +162,22 @@ export default async function handler(req, res) {
 
     parsed.cpf = parsed.cpf?.replace(/\D/g, "") || "";
 
+    // se telefone vier vazio, tenta aproveitar celular/telefone em campos alternativos
+    if (!parsed.telefone && parsed.celular) {
+      parsed.telefone = parsed.celular;
+    }
+    
+    // normaliza telefone
+    parsed.telefone = parsed.telefone?.replace(/\D/g, "") || "";
+    
+    // se o modelo colocou complemento do endereço no campo errado,
+    // move para complementoEndereco
+    if (!parsed.complementoEndereco && parsed.complemento) {
+      parsed.complementoEndereco = parsed.complemento;
+      parsed.complemento = "";
+    }
+    
+
     if (!isValidCpf(parsed.cpf)) {
       parsed.cpf = "";
     }
