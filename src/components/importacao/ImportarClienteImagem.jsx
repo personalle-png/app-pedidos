@@ -143,49 +143,42 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
   };
 
   const handleReadImage = async () => {
-    if (!imageFile) return;
+  if (!imageFile) return;
 
-    setProcessing(true);
-    setImportError("");
-    setCpfError("");
+  setProcessing(true);
+  setImportError("");
+  setCpfError("");
 
-    try {
-      const imageBase64 = await fileToBase64(imageFile);
+  try {
+    const imageBase64 = await fileToBase64(imageFile);
 
-      const response = await fetch("/api/importar-cliente-imagem", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ image: imageBase64 }),
-      });
+    const response = await fetch("/api/importar-cliente-imagem", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ image: imageBase64 }),
+    });
 
-      const rawText = await response.text();
+    const data = await response.json();
 
-      let data = {};
-      try {
-        data = rawText ? JSON.parse(rawText) : {};
-      } catch {
-        throw new Error(rawText || "Resposta inválida da rota.");
-      }
-
-      if (!response.ok) {
-        throw new Error(data?.error || "Não foi possível analisar a imagem.");
-      }
-
-      setForm((current) => ({
-        ...current,
-        ...data,
-      }));
-
-      setHasExtraction(true);
-    } catch (err) {
-      console.error("Erro ao ler imagem:", err);
-      setImportError(err instanceof Error ? err.message : "Não foi possível ler a imagem.");
-    } finally {
-      setProcessing(false);
+    if (!response.ok) {
+      throw new Error(data?.error || "Não foi possível analisar a imagem.");
     }
-  };
+
+    setForm((current) => ({
+      ...current,
+      ...data,
+    }));
+
+    setHasExtraction(true);
+  } catch (err) {
+    console.error(err);
+    setImportError(err.message || "Não foi possível ler a imagem.");
+  } finally {
+    setProcessing(false);
+  }
+};
 
   const buscarCep = async () => {
     const cepLimpo = String(form.cep || "").replace(/\D/g, "");
