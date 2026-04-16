@@ -1,5 +1,7 @@
 import OpenAI from "openai";
 
+const MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -52,7 +54,7 @@ export default async function handler(req, res) {
     };
 
     const response = await client.responses.create({
-      model: "gpt-5.4-nano",
+      model: MODEL,
       input: [
         {
           role: "user",
