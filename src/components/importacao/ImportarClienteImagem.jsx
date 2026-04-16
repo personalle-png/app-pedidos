@@ -16,7 +16,6 @@ const emptyClient = {
   bairro: "",
   cidade: "",
   estado: "",
-  rawText: "",
 };
 
 function Card({ children, className = "" }) {
@@ -112,9 +111,49 @@ const fileToBase64 = (file) =>
     reader.readAsDataURL(file);
   });
 
+function UploadBox({ title, fileName, previewUrl, onChange }) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <h3 className="font-medium text-slate-800">{title}</h3>
+      </div>
+
+      <label className="flex min-h-[180px] cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center hover:bg-slate-100">
+        {previewUrl ? (
+          <img
+            src={previewUrl}
+            alt="Prévia do cadastro"
+            className="max-h-[240px] rounded-2xl object-contain"
+          />
+        ) : (
+          <>
+            <ImageIcon className="h-10 w-10 text-slate-400" />
+            <p className="mt-3 font-medium text-slate-700">Clique para selecionar a imagem</p>
+            <p className="mt-1 text-sm text-slate-500">JPG ou PNG</p>
+          </>
+        )}
+
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/jpg"
+          className="hidden"
+          onChange={onChange}
+        />
+      </label>
+
+      <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
+        <span className="font-medium text-slate-800">Arquivo:</span> {fileName}
+      </div>
+    </div>
+  );
+}
+
 export default function ImportarClienteImagem({ onConfirmImport }) {
-  const [imageFile, setImageFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState("");
+  const [tipoImportacao, setTipoImportacao] = useState("elo7");
+  const [imageFile1, setImageFile1] = useState(null);
+  const [imageFile2, setImageFile2] = useState(null);
+  const [previewUrl1, setPreviewUrl1] = useState("");
+  const [previewUrl2, setPreviewUrl2] = useState("");
   const [form, setForm] = useState(emptyClient);
   const [processing, setProcessing] = useState(false);
   const [hasExtraction, setHasExtraction] = useState(false);
@@ -123,62 +162,97 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState("");
 
-  const imageName = useMemo(
-    () => imageFile?.name || "Nenhuma imagem selecionada",
-    [imageFile]
-  );
+  const imageName1 = useMemo(() => imageFile1?.name || "Nenhuma imagem selecionada", [imageFile1]);
+  const imageName2 = useMemo(() => imageFile2?.name || "Nenhuma imagem selecionada", [imageFile2]);
 
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const handleFileChange = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setImageFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
+  const resetFiles = () => {
+    setImageFile1(null);
+    setImageFile2(null);
+    setPreviewUrl1("");
+    setPreviewUrl2("");
     setHasExtraction(false);
     setImportError("");
   };
 
-  const handleReadImage = async () => {
-  if (!imageFile) return;
+  const handleTipoChange = (tipo) => {
+    setTipoImportacao(tipo);
+    setForm(emptyClient);
+    setCpfError("");
+    setCepError("");
+    resetFiles();
+  };
 
-  setProcessing(true);
-  setImportError("");
-  setCpfError("");
+  const handleFileChange = (slot, event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-  try {
-    const imageBase64 = await fileToBase64(imageFile);
-
-    const response = await fetch("/api/importar-cliente-imagem", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ image: imageBase64 }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data?.error || "Não foi possível analisar a imagem.");
+    if (slot === 1) {
+      setImageFile1(file);
+      setPreviewUrl1(URL.createObjectURL(file));
+    } else {
+      setImageFile2(file);
+      setPreviewUrl2(URL.createObjectURL(file));
     }
 
-    setForm((current) => ({
-      ...current,
-      ...data,
-    }));
+    setHasExtraction(false);
+    setImportError("");
+  };
 
-    setHasExtraction(true);
-  } catch (err) {
-    console.error(err);
-    setImportError(err.message || "Não foi possível ler a imagem.");
-  } finally {
-    setProcessing(false);
-  }
-};
+  const canRead = tipoImportacao === "elo7" ? imageFile1 && imageFile2 : imageFile1;
+
+  const handleReadImage = async () => {
+    if (!canRead) return;
+
+    setProcessing(true);
+    setImportError("");
+    setCpfError("");
+
+    try {
+      const images = [];
+      if (imageFile1) images.push(await fileToBase64(imageFile1));
+      if (tipoImportacao === "elo7" && imageFile2) images.push(await fileToBase64(imageFile2));
+
+      const response = await fetch("/api/importar-cliente-imagem", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          tipo: tipoImportacao,
+          images,
+        }),
+      });
+
+      const rawText = await response.text();
+
+      let data = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        throw new Error(rawText || "Resposta inválida da rota.");
+      }
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Não foi possível analisar a imagem.");
+      }
+
+      setForm((current) => ({
+        ...current,
+        ...data,
+      }));
+
+      setHasExtraction(true);
+    } catch (err) {
+      console.error("Erro ao ler imagem:", err);
+      setImportError(err instanceof Error ? err.message : "Não foi possível ler a imagem.");
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   const buscarCep = async () => {
     const cepLimpo = String(form.cep || "").replace(/\D/g, "");
@@ -264,9 +338,7 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
       const clienteExistente = await verificarDuplicidade();
 
       if (clienteExistente) {
-        setImportError(
-          `Já existe um cliente cadastrado: ${clienteExistente.nome}. Verifique CPF ou telefone.`
-        );
+        setImportError(`Já existe um cliente cadastrado: ${clienteExistente.nome}. Verifique CPF ou telefone.`);
         return;
       }
 
@@ -297,12 +369,10 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
       const importedData = { ...form };
 
       setForm(emptyClient);
-      setImageFile(null);
-      setPreviewUrl("");
-      setHasExtraction(false);
       setCpfError("");
       setImportError("");
       setCepError("");
+      resetFiles();
 
       if (onConfirmImport) {
         onConfirmImport(importedData);
@@ -317,78 +387,86 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
-            Importar cliente por imagem
-          </h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Importar cliente</h1>
           <p className="mt-1 text-slate-600">
-            Envie um JPG ou PNG, revise os dados lidos e confirme a importação.
+            Escolha a origem, envie as imagens e revise os dados antes de confirmar.
           </p>
         </div>
+
+        <Card>
+          <div className="p-5">
+            <p className="mb-3 text-sm font-medium text-slate-700">Origem da importação</p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant={tipoImportacao === "elo7" ? "default" : "outline"}
+                onClick={() => handleTipoChange("elo7")}
+              >
+                Elo7
+              </Button>
+              <Button
+                type="button"
+                variant={tipoImportacao === "loja_integrada" ? "default" : "outline"}
+                onClick={() => handleTipoChange("loja_integrada")}
+              >
+                Loja Integrada
+              </Button>
+            </div>
+          </div>
+        </Card>
 
         <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
           <Card>
             <div className="p-6 space-y-4">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">Imagem do cadastro</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Imagens do cadastro</h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  O sistema lê os dados da imagem e preenche o formulário para revisão.
+                  {tipoImportacao === "elo7"
+                    ? "No Elo7, envie as 2 imagens. A primeira tem prioridade e pode trazer o CPF."
+                    : "Na Loja Integrada, envie uma única imagem com os dados do cliente."}
                 </p>
               </div>
 
-              <label className="flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center hover:bg-slate-100">
-                {previewUrl ? (
-                  <img
-                    src={previewUrl}
-                    alt="Prévia do cadastro"
-                    className="max-h-[320px] rounded-2xl object-contain"
+              {tipoImportacao === "elo7" ? (
+                <div className="space-y-5">
+                  <UploadBox
+                    title="Imagem 1"
+                    fileName={imageName1}
+                    previewUrl={previewUrl1}
+                    onChange={(e) => handleFileChange(1, e)}
                   />
-                ) : (
-                  <>
-                    <ImageIcon className="h-10 w-10 text-slate-400" />
-                    <p className="mt-3 font-medium text-slate-700">
-                      Clique para selecionar a imagem
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">JPG ou PNG</p>
-                  </>
-                )}
 
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/jpg"
-                  className="hidden"
-                  onChange={handleFileChange}
+                  <UploadBox
+                    title="Imagem 2"
+                    fileName={imageName2}
+                    previewUrl={previewUrl2}
+                    onChange={(e) => handleFileChange(2, e)}
+                  />
+                </div>
+              ) : (
+                <UploadBox
+                  title="Imagem"
+                  fileName={imageName1}
+                  previewUrl={previewUrl1}
+                  onChange={(e) => handleFileChange(1, e)}
                 />
-              </label>
-
-              <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
-                <span className="font-medium text-slate-800">Arquivo:</span> {imageName}
-              </div>
+              )}
 
               <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  onClick={handleReadImage}
-                  disabled={!imageFile || processing}
-                >
-                  {processing ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Upload className="mr-2 h-4 w-4" />
-                  )}
-                  Ler imagem
+                <Button type="button" onClick={handleReadImage} disabled={!canRead || processing}>
+                  {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                  Ler imagem{tipoImportacao === "elo7" ? "s" : ""}
                 </Button>
 
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    setImageFile(null);
-                    setPreviewUrl("");
                     setForm(emptyClient);
-                    setHasExtraction(false);
                     setCpfError("");
                     setImportError("");
                     setCepError("");
+                    resetFiles();
                   }}
                 >
                   Limpar
@@ -416,10 +494,7 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="grid gap-2 md:col-span-2">
                   <Label>Nome</Label>
-                  <Input
-                    value={form.nome}
-                    onChange={(e) => updateField("nome", e.target.value)}
-                  />
+                  <Input value={form.nome} onChange={(e) => updateField("nome", e.target.value)} />
                 </div>
 
                 <div className="grid gap-2 md:col-span-2">
@@ -438,18 +513,12 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
 
                 <div className="grid gap-2">
                   <Label>Telefone</Label>
-                  <Input
-                    value={form.telefone}
-                    onChange={(e) => updateField("telefone", e.target.value)}
-                  />
+                  <Input value={form.telefone} onChange={(e) => updateField("telefone", e.target.value)} />
                 </div>
 
                 <div className="grid gap-2">
                   <Label>E-mail</Label>
-                  <Input
-                    value={form.email}
-                    onChange={(e) => updateField("email", e.target.value)}
-                  />
+                  <Input value={form.email} onChange={(e) => updateField("email", e.target.value)} />
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end md:col-span-2">
@@ -466,96 +535,48 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
                     />
                   </div>
 
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={buscarCep}
-                    disabled={cepLoading}
-                  >
+                  <Button type="button" variant="outline" onClick={buscarCep} disabled={cepLoading}>
                     {cepLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Buscar CEP
                   </Button>
                 </div>
 
-                {cepError && (
-                  <p className="text-sm text-red-600 md:col-span-2">{String(cepError)}</p>
-                )}
+                {cepError && <p className="text-sm text-red-600 md:col-span-2">{String(cepError)}</p>}
 
                 <div className="grid gap-2 md:col-span-2">
                   <Label>Endereço</Label>
-                  <Input
-                    value={form.endereco}
-                    onChange={(e) => updateField("endereco", e.target.value)}
-                  />
+                  <Input value={form.endereco} onChange={(e) => updateField("endereco", e.target.value)} />
                 </div>
 
                 <div className="grid gap-2">
                   <Label>Número</Label>
-                  <Input
-                    value={form.numero}
-                    onChange={(e) => updateField("numero", e.target.value)}
-                  />
+                  <Input value={form.numero} onChange={(e) => updateField("numero", e.target.value)} />
                 </div>
 
                 <div className="grid gap-2">
                   <Label>Complemento</Label>
-                  <Input
-                    value={form.complemento}
-                    onChange={(e) => updateField("complemento", e.target.value)}
-                  />
+                  <Input value={form.complemento} onChange={(e) => updateField("complemento", e.target.value)} />
                 </div>
 
                 <div className="grid gap-2 md:col-span-2">
                   <Label>Complemento do endereço</Label>
-                  <Input
-                    value={form.complementoEndereco}
-                    onChange={(e) => updateField("complementoEndereco", e.target.value)}
-                  />
+                  <Input value={form.complementoEndereco} onChange={(e) => updateField("complementoEndereco", e.target.value)} />
                 </div>
 
                 <div className="grid gap-2">
                   <Label>Bairro</Label>
-                  <Input
-                    value={form.bairro}
-                    onChange={(e) => updateField("bairro", e.target.value)}
-                  />
+                  <Input value={form.bairro} onChange={(e) => updateField("bairro", e.target.value)} />
                 </div>
 
                 <div className="grid gap-2">
                   <Label>Cidade</Label>
-                  <Input
-                    value={form.cidade}
-                    onChange={(e) => updateField("cidade", e.target.value)}
-                  />
+                  <Input value={form.cidade} onChange={(e) => updateField("cidade", e.target.value)} />
                 </div>
 
                 <div className="grid gap-2 md:col-span-2">
                   <Label>Estado</Label>
-                  <Input
-                    value={form.estado}
-                    onChange={(e) => updateField("estado", e.target.value)}
-                  />
+                  <Input value={form.estado} onChange={(e) => updateField("estado", e.target.value)} />
                 </div>
-
-                <div className="grid gap-2 md:col-span-2">
-                  <Label>Observações</Label>
-                  <Textarea
-                    rows={4}
-                    value={form.observacoes}
-                    onChange={(e) => updateField("observacoes", e.target.value)}
-                  />
-                </div>
-
-                {typeof form.rawText === "string" && form.rawText && (
-                  <div className="rounded-2xl bg-slate-50 p-4 md:col-span-2">
-                    <p className="mb-2 text-sm font-medium text-slate-700">
-                      Texto lido da imagem
-                    </p>
-                    <pre className="whitespace-pre-wrap text-xs text-slate-600">
-                      {form.rawText}
-                    </pre>
-                  </div>
-                )}
               </div>
 
               {importError && (
@@ -565,11 +586,7 @@ export default function ImportarClienteImagem({ onConfirmImport }) {
               )}
 
               <div className="flex flex-wrap gap-2 pt-2">
-                <Button
-                  type="button"
-                  onClick={handleConfirm}
-                  disabled={!hasExtraction}
-                >
+                <Button type="button" onClick={handleConfirm} disabled={!hasExtraction}>
                   Confirmar importação
                 </Button>
 
