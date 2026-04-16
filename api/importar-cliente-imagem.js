@@ -1,5 +1,31 @@
 import OpenAI from "openai";
 
+function isValidCpf(cpf) {
+  const clean = String(cpf || "").replace(/\D/g, "");
+
+  if (clean.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(clean)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 9; i += 1) {
+    sum += Number(clean[i]) * (10 - i);
+  }
+
+  let check1 = (sum * 10) % 11;
+  if (check1 === 10) check1 = 0;
+  if (check1 !== Number(clean[9])) return false;
+
+  sum = 0;
+  for (let i = 0; i < 10; i += 1) {
+    sum += Number(clean[i]) * (11 - i);
+  }
+
+  let check2 = (sum * 10) % 11;
+  if (check2 === 10) check2 = 0;
+
+  return check2 === Number(clean[10]);
+}
+
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -13,30 +39,27 @@ function buildPrompt(tipo) {
 
       "PASSO 1:\n" +
       "Leia cuidadosamente a IMAGEM 1.\n" +
-      "Procure por um CPF no formato 000.000.000-00 ou apenas números.\n" +
-      "Se encontrar um CPF na IMAGEM 1, extraia e preencha o campo cpf.\n\n" +
+      "Procure especificamente pelo campo rotulado como 'CPF do comprador'.\n" +
+      "Extraia apenas o número que estiver ao lado desse rótulo.\n" +
+      "Não use outros números da tela como CPF.\n" +
+      "Se houver dúvida, devolva string vazia em vez de inventar.\n\n" +
 
       "PASSO 2:\n" +
-      "Leia a IMAGEM 2 para complementar os dados restantes.\n\n" +
+      "Leia a IMAGEM 2 para complementar os demais dados.\n\n" +
 
       "REGRAS IMPORTANTES:\n" +
-      "- Sempre priorize os dados da IMAGEM 1.\n" +
-      "- Nunca deixe o campo cpf vazio se houver um número com padrão de CPF.\n" +
-      "- Se encontrar um número com 11 dígitos, considere como CPF.\n" +
-      "- Não invente dados.\n\n" +
-
-      "Extraia somente os campos:\n" +
-      "nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado.\n\n" +
-
-      "Se não encontrar algum campo, retorne string vazia."
+      "- Sempre priorize a IMAGEM 1.\n" +
+      "- O CPF deve vir somente do campo 'CPF do comprador'.\n" +
+      "- Ignore identificador, CEP, telefone, códigos de pedido e qualquer outro número.\n" +
+      "- Extraia somente os campos: nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado.\n" +
+      "- Não invente dados. Se não souber, devolva string vazia."
     );
   }
 
   return (
-    "Você receberá 1 imagem de cliente importado da Loja Integrada.\n\n" +
-    "Extraia somente os campos:\n" +
-    "nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado.\n\n" +
-    "Se encontrar um número com 11 dígitos, considere como CPF.\n" +
+    "Você receberá 1 imagem de cliente importado da Loja Integrada.\n" +
+    "Extraia somente os campos: nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado.\n" +
+    "O CPF deve vir somente do campo explicitamente rotulado como CPF.\n" +
     "Não invente dados. Se não souber, devolva string vazia."
   );
 }
@@ -138,6 +161,10 @@ export default async function handler(req, res) {
     const parsed = JSON.parse(response.output_text || JSON.stringify(emptyResult()));
 
     parsed.cpf = parsed.cpf?.replace(/\D/g, "") || "";
+
+    if (!isValidCpf(parsed.cpf)) {
+      parsed.cpf = "";
+    }
 
     return res.status(200).json({
       ...emptyResult(),
