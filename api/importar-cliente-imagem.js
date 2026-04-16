@@ -39,7 +39,21 @@ export default async function handler(req, res) {
       ],
     });
 
-    const text = response.output_text || "";
+    const raw = response.output_text || "";
+
+// remove ```json ... ```
+const clean = raw
+  .replace(/```json/g, "")
+  .replace(/```/g, "")
+  .trim();
+
+let parsed = {};
+
+try {
+  parsed = JSON.parse(clean);
+} catch {
+  parsed = {};
+}
 
     return res.status(200).json({
       nome: "",
