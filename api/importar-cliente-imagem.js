@@ -9,20 +9,34 @@ const MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 function buildPrompt(tipo) {
   if (tipo === "elo7") {
     return (
-      "Você receberá 2 imagens do mesmo cliente importado do Elo7. " +
-      "A IMAGEM 1 contém os dados principais e pode conter o CPF. " +
-      "A IMAGEM 2 complementa o cadastro com outros dados. " +
-      "Combine os dados das duas imagens em um único cadastro. " +
-      "Sempre priorize a IMAGEM 1 quando houver conflito. " +
-      "Se o CPF aparecer na IMAGEM 1, preencha o campo cpf com esse valor. " +
-      "Extraia somente os campos: nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado. " +
-      "Não invente dados. Se não souber, devolva string vazia."
+      "Você receberá 2 imagens do mesmo cliente importado do Elo7.\n\n" +
+
+      "PASSO 1:\n" +
+      "Leia cuidadosamente a IMAGEM 1.\n" +
+      "Procure por um CPF no formato 000.000.000-00 ou apenas números.\n" +
+      "Se encontrar um CPF na IMAGEM 1, extraia e preencha o campo cpf.\n\n" +
+
+      "PASSO 2:\n" +
+      "Leia a IMAGEM 2 para complementar os dados restantes.\n\n" +
+
+      "REGRAS IMPORTANTES:\n" +
+      "- Sempre priorize os dados da IMAGEM 1.\n" +
+      "- Nunca deixe o campo cpf vazio se houver um número com padrão de CPF.\n" +
+      "- Se encontrar um número com 11 dígitos, considere como CPF.\n" +
+      "- Não invente dados.\n\n" +
+
+      "Extraia somente os campos:\n" +
+      "nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado.\n\n" +
+
+      "Se não encontrar algum campo, retorne string vazia."
     );
   }
 
   return (
-    "Você receberá 1 imagem de cliente importado da Loja Integrada. " +
-    "Extraia somente os campos: nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado. " +
+    "Você receberá 1 imagem de cliente importado da Loja Integrada.\n\n" +
+    "Extraia somente os campos:\n" +
+    "nome, cpf, telefone, email, observacoes, cep, endereco, numero, complemento, complementoEndereco, bairro, cidade, estado.\n\n" +
+    "Se encontrar um número com 11 dígitos, considere como CPF.\n" +
     "Não invente dados. Se não souber, devolva string vazia."
   );
 }
@@ -122,6 +136,8 @@ export default async function handler(req, res) {
     });
 
     const parsed = JSON.parse(response.output_text || JSON.stringify(emptyResult()));
+
+    parsed.cpf = parsed.cpf?.replace(/\D/g, "") || "";
 
     return res.status(200).json({
       ...emptyResult(),
