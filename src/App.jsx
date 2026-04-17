@@ -9,6 +9,7 @@ import OrderForm from './components/forms/OrderForm.jsx';
 import PedidosTab from './components/tabs/PedidosTab.jsx';
 import AgendaTab from './components/tabs/AgendaTab.jsx';
 import ClientesTab from './components/tabs/ClientesTab.jsx';
+import CadastroProdutosFiscal from "./components/produtos/CadastroProdutosFiscal";
 import {
   daysUntil,
   emptyClient,
