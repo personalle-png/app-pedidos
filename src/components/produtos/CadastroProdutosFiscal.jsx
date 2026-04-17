@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from "react";
+import { supabase } from "../../lib/supabase";
+
 import {
   Box,
   Barcode,
