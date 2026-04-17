@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { MessageCircle, PencilLine, Trash2 } from "lucide-react";
+import { MessageCircle, PencilLine, Trash2, Search } from "lucide-react";
 import { Card, Input, Button } from "../ui/Primitives.jsx";
 import { getWhatsAppLink } from "../../utils/formatters.js";
 import ImportarClienteImagem from "../importacao/ImportarClienteImagem.jsx";
@@ -15,6 +15,19 @@ export default function ClientesTab({
   clients,
 }) {
   const [importOpen, setImportOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState(clientSearch || "");
+  const [searchSubmitted, setSearchSubmitted] = useState(false);
+
+  const handleSearch = () => {
+    setClientSearch(searchInput.trim());
+    setSearchSubmitted(true);
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setClientSearch("");
+    setSearchSubmitted(false);
+  };
 
   return (
     <>
@@ -37,149 +50,169 @@ export default function ClientesTab({
               </div>
             </div>
 
-            <div className="mt-3">
+            <div className="mt-3 flex flex-col gap-2 md:flex-row">
               <Input
                 placeholder="Buscar por nome, CPF, CEP, endereço, cidade, telefone ou e-mail"
-                value={clientSearch}
-                onChange={(e) => setClientSearch(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch();
+                  }
+                }}
               />
+
+              <div className="flex gap-2">
+                <Button onClick={handleSearch}>
+                  <Search className="mr-2 h-4 w-4" />
+                  Pesquisar
+                </Button>
+
+                <Button variant="outline" onClick={handleClearSearch}>
+                  Limpar
+                </Button>
+              </div>
             </div>
 
             <div className="mt-4 grid gap-4">
-              {filteredClients.map((client) => {
-                const pedidosDoCliente = orders.filter(
-                  (order) => order.cliente?.toLowerCase() === client.nome?.toLowerCase()
-                );
+              {!searchSubmitted ? (
+                <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
+                  Digite algo e clique em pesquisar para mostrar os clientes.
+                </div>
+              ) : filteredClients.length ? (
+                filteredClients.map((client) => {
+                  const pedidosDoCliente = orders.filter(
+                    (order) => order.cliente?.toLowerCase() === client.nome?.toLowerCase()
+                  );
 
-                const whatsappLink = client.telefone
-                  ? getWhatsAppLink(client.telefone, `Olá, ${client.nome}! 😊`)
-                  : null;
+                  const whatsappLink = client.telefone
+                    ? getWhatsAppLink(client.telefone, `Olá, ${client.nome}! 😊`)
+                    : null;
 
-                return (
-                  <div
-                    key={client.id}
-                    className="rounded-3xl border border-slate-200 bg-white p-4"
-                  >
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="space-y-2">
-                        <h3 className="text-lg font-semibold text-slate-900">
-                          {client.nome}
-                        </h3>
+                  return (
+                    <div
+                      key={client.id}
+                      className="rounded-3xl border border-slate-200 bg-white p-4"
+                    >
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-semibold text-slate-900">
+                            {client.nome}
+                          </h3>
 
-                        <p className="text-sm text-slate-600">
-                          {client.cidade} · {client.estado}
-                        </p>
-
-                        {client.cpf && (
-                          <p className="text-sm text-slate-600">CPF: {client.cpf}</p>
-                        )}
-
-                        {client.cep && (
-                          <p className="text-sm text-slate-600">CEP: {client.cep}</p>
-                        )}
-
-                        {client.endereco && (
                           <p className="text-sm text-slate-600">
-                            {client.endereco}
-                            {client.numero ? `, ${client.numero}` : ""}
-                          </p>
-                        )}
-
-                        {client.complementoEndereco && (
-                          <p className="text-sm text-slate-600">
-                            Complemento do endereço: {client.complementoEndereco}
-                          </p>
-                        )}
-
-                        {client.bairro && (
-                          <p className="text-sm text-slate-600">
-                            Bairro: {client.bairro}
-                          </p>
-                        )}
-
-                        {client.complemento && (
-                          <p className="text-sm text-slate-600">
-                            Complemento: {client.complemento}
-                          </p>
-                        )}
-
-                        {client.telefone && (
-                          <p className="text-sm text-slate-600">
-                            Telefone: {client.telefone}
-                          </p>
-                        )}
-
-                        {client.email && (
-                          <p className="text-sm text-slate-600">
-                            E-mail: {client.email}
-                          </p>
-                        )}
-
-                        {client.observacoes && (
-                          <p className="text-sm text-slate-500">
-                            {client.observacoes}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="min-w-[220px] space-y-2">
-                        <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
-                          <p>
-                            <span className="font-medium text-slate-800">
-                              Pedidos vinculados:
-                            </span>{" "}
-                            {pedidosDoCliente.length}
+                            {client.cidade} · {client.estado}
                           </p>
 
-                          {pedidosDoCliente.slice(0, 3).map((pedido) => (
-                            <p key={pedido.id} className="mt-1">
-                              #{pedido.pedido} · {pedido.item}
+                          {client.cpf && (
+                            <p className="text-sm text-slate-600">CPF: {client.cpf}</p>
+                          )}
+
+                          {client.cep && (
+                            <p className="text-sm text-slate-600">CEP: {client.cep}</p>
+                          )}
+
+                          {client.endereco && (
+                            <p className="text-sm text-slate-600">
+                              {client.endereco}
+                              {client.numero ? `, ${client.numero}` : ""}
                             </p>
-                          ))}
+                          )}
+
+                          {client.complementoEndereco && (
+                            <p className="text-sm text-slate-600">
+                              Complemento do endereço: {client.complementoEndereco}
+                            </p>
+                          )}
+
+                          {client.bairro && (
+                            <p className="text-sm text-slate-600">
+                              Bairro: {client.bairro}
+                            </p>
+                          )}
+
+                          {client.complemento && (
+                            <p className="text-sm text-slate-600">
+                              Complemento: {client.complemento}
+                            </p>
+                          )}
+
+                          {client.telefone && (
+                            <p className="text-sm text-slate-600">
+                              Telefone: {client.telefone}
+                            </p>
+                          )}
+
+                          {client.email && (
+                            <p className="text-sm text-slate-600">
+                              E-mail: {client.email}
+                            </p>
+                          )}
+
+                          {client.observacoes && (
+                            <p className="text-sm text-slate-500">
+                              {client.observacoes}
+                            </p>
+                          )}
                         </div>
 
-                        <div className="flex flex-wrap gap-2">
-                          {whatsappLink && (
+                        <div className="min-w-[220px] space-y-2">
+                          <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
+                            <p>
+                              <span className="font-medium text-slate-800">
+                                Pedidos vinculados:
+                              </span>{" "}
+                              {pedidosDoCliente.length}
+                            </p>
+
+                            {pedidosDoCliente.slice(0, 3).map((pedido) => (
+                              <p key={pedido.id} className="mt-1">
+                                #{pedido.pedido} · {pedido.item}
+                              </p>
+                            ))}
+                          </div>
+
+                          <div className="flex flex-wrap gap-2">
+                            {whatsappLink && (
+                              <Button
+                                variant="outline"
+                                className="rounded-xl"
+                                onClick={() =>
+                                  window.open(whatsappLink, "_blank", "noopener,noreferrer")
+                                }
+                              >
+                                <MessageCircle className="mr-2 h-4 w-4" />
+                                WhatsApp
+                              </Button>
+                            )}
+
                             <Button
                               variant="outline"
                               className="rounded-xl"
-                              onClick={() =>
-                                window.open(whatsappLink, "_blank", "noopener,noreferrer")
-                              }
+                              onClick={() => {
+                                setEditingClient(client);
+                                setClientOpen(true);
+                              }}
                             >
-                              <MessageCircle className="mr-2 h-4 w-4" />
-                              WhatsApp
+                              <PencilLine className="mr-2 h-4 w-4" />
+                              Editar
                             </Button>
-                          )}
 
-                          <Button
-                            variant="outline"
-                            className="rounded-xl"
-                            onClick={() => {
-                              setEditingClient(client);
-                              setClientOpen(true);
-                            }}
-                          >
-                            <PencilLine className="mr-2 h-4 w-4" />
-                            Editar
-                          </Button>
-
-                          <Button
-                            variant="outline"
-                            className="rounded-xl"
-                            onClick={() => deleteClient(client.id)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir
-                          </Button>
+                            <Button
+                              variant="outline"
+                              className="rounded-xl"
+                              onClick={() => deleteClient(client.id)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-
-              {!filteredClients.length && (
+                  );
+                })
+              ) : (
                 <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
                   Nenhum cliente encontrado.
                 </div>
