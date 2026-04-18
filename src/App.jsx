@@ -10,6 +10,7 @@ import PedidosTab from './components/tabs/PedidosTab.jsx';
 import AgendaTab from './components/tabs/AgendaTab.jsx';
 import ClientesTab from './components/tabs/ClientesTab.jsx';
 import CadastroProdutosFiscal from "./components/produtos/CadastroProdutosFiscal";
+
 import {
   daysUntil,
   emptyClient,
@@ -46,6 +47,7 @@ export default function App() {
   const [productOpen, setProductOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [savingProduct, setSavingProduct] = useState(false);
+  const [productsScreenOpen, setProductsScreenOpen] = useState(false);
 
   const saveProductIfNeeded = async (item) => {
     const nome = String(item || "").trim();
@@ -380,6 +382,7 @@ export default function App() {
             <Button variant="outline" className="rounded-2xl" onClick={loadData}><RefreshCcw className="mr-2 h-4 w-4" /> Atualizar</Button>
             <Button className="rounded-2xl" onClick={() => { setEditingOrder(null); setOrderOpen(true); }}><Plus className="mr-2 h-4 w-4" /> Novo pedido</Button>
             <Button variant="outline" className="rounded-2xl" onClick={() => { setEditingClient(null); setClientOpen(true); }}><Users className="mr-2 h-4 w-4" /> Novo cliente</Button>
+            <Button variant="outline" className="rounded-2xl"  onClick={() => setProductsScreenOpen(true)}>  <Package className="mr-2 h-4 w-4" /> Produtos</Button>
           </div>
         </div>
 
@@ -459,11 +462,26 @@ export default function App() {
         <ClientForm onSave={saveClient} initialValues={editingClient || emptyClient} onCancel={() => setClientOpen(false)} saving={savingClient} />
       </Modal>
 
+      {productsScreenOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="max-h-[90vh] w-full max-w-7xl overflow-auto rounded-3xl bg-white">
+      <CadastroProdutosFiscal />
+
+      <div className="flex justify-end p-4">
+        <Button variant="outline" onClick={() => setProductsScreenOpen(false)}>
+          Fechar
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
+
       <Modal
         open={productOpen}
         title={editingProduct ? "Editar produto" : "Novo produto"}
         onClose={() => setProductOpen(false)}
       >
+        
         <ProductForm
           onSave={saveProduct}
           initialValues={editingProduct || { nome: "", ativo: true }}
