@@ -218,54 +218,77 @@ export default function CadastroProdutosFiscal() {
   });
 };
 
-  const handleSave = async () => {
+ const handleSave = async () => {
   try {
     if (!form.nome?.trim()) {
       alert("Preencha o nome do produto.");
       return;
     }
 
+    if (!form.sku) {
+      alert("SKU não gerado.");
+      return;
+    }
+
+    const toNumber = (v) => {
+      const n = Number(String(v || "0").replace(",", "."));
+      return isNaN(n) ? 0 : n;
+    };
+
     const payload = {
       nome: form.nome,
-      sku: form.sku || "",
+      sku: form.sku,
+
       codigo_barras: form.codigoBarras || "",
       descricao: form.descricao || "",
       categoria: form.categoria || "",
       marca: form.marca || "",
       unidade: form.unidade || "UN",
       origem: form.origem || "0",
-      ncm: form.ncm || "",
+      ncm: form.ncm || "95059000",
       cest: form.cest || "",
       cfop_padrao: form.cfopPadrao || "",
       cst_icms: form.cstIcms || "",
       csosn: form.csosn || "",
       cst_pis: form.cstPis || "",
       cst_cofins: form.cstCofins || "",
-      aliquota_icms: Number(String(form.aliquotaIcms || "0").replace(",", ".")) || 0,
-      aliquota_pis: Number(String(form.aliquotaPis || "0").replace(",", ".")) || 0,
-      aliquota_cofins: Number(String(form.aliquotaCofins || "0").replace(",", ".")) || 0,
-      preco_custo: Number(String(form.precoCusto || "0").replace(",", ".")) || 0,
-      preco_venda: Number(String(form.precoVenda || "0").replace(",", ".")) || 0,
-      estoque_atual: Number(String(form.estoqueAtual || "0").replace(",", ".")) || 0,
-      estoque_minimo: Number(String(form.estoqueMinimo || "0").replace(",", ".")) || 0,
-      peso_liquido: Number(String(form.pesoLiquido || "0").replace(",", ".")) || 0,
-      peso_bruto: Number(String(form.pesoBruto || "0").replace(",", ".")) || 0,
-      largura: Number(String(form.largura || "0").replace(",", ".")) || 0,
-      altura: Number(String(form.altura || "0").replace(",", ".")) || 0,
-      comprimento: Number(String(form.comprimento || "0").replace(",", ".")) || 0,
+
+      aliquota_icms: toNumber(form.aliquotaIcms),
+      aliquota_pis: toNumber(form.aliquotaPis),
+      aliquota_cofins: toNumber(form.aliquotaCofins),
+
+      preco_custo: toNumber(form.precoCusto),
+      preco_venda: toNumber(form.precoVenda),
+
+      estoque_atual: toNumber(form.estoqueAtual),
+      estoque_minimo: toNumber(form.estoqueMinimo),
+
+      peso_liquido: toNumber(form.pesoLiquido),
+      peso_bruto: toNumber(form.pesoBruto),
+
+      largura: toNumber(form.largura),
+      altura: toNumber(form.altura),
+      comprimento: toNumber(form.comprimento),
+
       ativo: !!form.ativo,
       observacoes: form.observacoes || "",
     };
 
-    const { error } = await supabase.from("products").upsert([payload], {
-      onConflict: "sku",
-    });
+    console.log("Payload enviado:", payload);
 
-    if (error) throw error;
+    const { error } = await supabase
+      .from("products")
+      .upsert([payload], { onConflict: "sku" });
+
+    if (error) {
+      console.error("Erro Supabase:", error);
+      alert(error.message);
+      return;
+    }
 
     alert("Produto salvo com sucesso!");
   } catch (err) {
-    console.error("Erro ao salvar produto:", err);
+    console.error("Erro geral:", err);
     alert("Erro ao salvar produto.");
   }
 };
