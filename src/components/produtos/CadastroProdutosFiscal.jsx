@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { useEffect } from "react";
+
 
 import {
   Box,
@@ -62,28 +64,24 @@ const emptyProduct = {
   observacoes: "",
 };
 
-const mockProducts = [
-  {
-    id: 1,
-    nome: "Jogo da Memória Personalizado",
-    sku: "JMP-001",
-    ncm: "95049099",
-    unidade: "UN",
-    precoVenda: "24.90",
-    estoqueAtual: "120",
-    ativo: true,
-  },
-  {
-    id: 2,
-    nome: "Quebra-Cabeça MDF 20 Peças",
-    sku: "QCM-020",
-    ncm: "95030099",
-    unidade: "UN",
-    precoVenda: "32.50",
-    estoqueAtual: "48",
-    ativo: true,
-  },
-];
+const loadProducts = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    setProducts(data || []);
+  } catch (err) {
+    console.error("Erro ao carregar produtos:", err);
+  }
+};
+
+useEffect(() => {
+  loadProducts();
+}, []);
 
 function Card({ children, className = "" }) {
   return (
@@ -184,7 +182,7 @@ function toNumber(value) {
 
 export default function CadastroProdutosFiscal() {
   const [search, setSearch] = useState("");
-  const [products, setProducts] = useState(mockProducts);
+  const [products, setProducts] = useState([]);
   const [form, setForm] = useState(emptyProduct);
 
   const filteredProducts = useMemo(() => {
