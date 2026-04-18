@@ -13,6 +13,23 @@ import {
   Trash2,
 } from "lucide-react";
 
+function gerarSKU(nome) {
+  if (!nome) return "";
+
+  const base = nome
+    .toUpperCase()
+    .replace(/[^A-Z0-9 ]/g, "")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 3)
+    .map(p => p.substring(0, 3))
+    .join("");
+
+  const random = Math.floor(100 + Math.random() * 900);
+
+  return `${base}-${random}`;
+}
+
 const emptyProduct = {
   nome: "",
   sku: "",
@@ -22,7 +39,7 @@ const emptyProduct = {
   marca: "",
   unidade: "UN",
   origem: "0",
-  ncm: "",
+  ncm: "95059000",
   cest: "",
   cfopPadrao: "5102",
   cstIcms: "00",
@@ -189,8 +206,17 @@ export default function CadastroProdutosFiscal() {
   }, [form.precoCusto, form.precoVenda]);
 
   const updateField = (field, value) => {
-    setForm((current) => ({ ...current, [field]: value }));
-  };
+  setForm((current) => {
+    const updated = { ...current, [field]: value };
+
+    // gerar SKU automaticamente quando digitar nome
+    if (field === "nome" && !current.sku) {
+      updated.sku = gerarSKU(value);
+    }
+
+    return updated;
+  });
+};
 
   const handleSave = async () => {
   try {
