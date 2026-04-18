@@ -2,9 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
 import { Save, Search } from "lucide-react";
 
-// ========================
-// UTIL
-// ========================
+// ================= UTIL =================
 function gerarSKU(nome) {
   if (!nome) return "";
 
@@ -14,80 +12,59 @@ function gerarSKU(nome) {
     .split(" ")
     .filter(Boolean)
     .slice(0, 3)
-    .map((p) => p.substring(0, 3))
+    .map(p => p.substring(0, 3))
     .join("");
 
-  const random = Math.floor(100 + Math.random() * 900);
-  return `${base}-${random}`;
+  return `${base}-${Math.floor(100 + Math.random() * 900)}`;
 }
 
-function toNumber(value) {
-  const parsed = Number(String(value || "").replace(",", "."));
-  return Number.isFinite(parsed) ? parsed : 0;
+function toNumber(v) {
+  const n = Number(String(v || "0").replace(",", "."));
+  return isNaN(n) ? 0 : n;
 }
 
-// ========================
-// COMPONENTES UI SIMPLES
-// ========================
+// ================= COMPONENTES =================
 function Input({ label, ...props }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="font-medium text-slate-700">{label}</span>
-      <input
-        className="border rounded-lg px-3 py-2 outline-none focus:border-slate-400"
-        {...props}
-      />
+      <span className="text-slate-600">{label}</span>
+      <input className="border rounded-lg px-3 py-2" {...props} />
     </label>
   );
 }
 
-function Button({ children, variant = "default", ...props }) {
-  const base = "px-4 py-2 rounded-lg text-sm flex items-center gap-2";
-
-  const styles =
-    variant === "outline"
-      ? "border bg-white"
-      : "bg-slate-900 text-white";
-
+function Button({ children, ...props }) {
   return (
-    <button className={`${base} ${styles}`} {...props}>
+    <button className="bg-slate-900 text-white px-4 py-2 rounded-lg flex items-center gap-2" {...props}>
       {children}
     </button>
   );
 }
 
-// ========================
-// ESTADO INICIAL
-// ========================
+// ================= ESTADO =================
 const emptyProduct = {
   nome: "",
   sku: "",
+  unidade: "UN",
   ncm: "95059000",
   precoVenda: "",
+  pesoLiquido: "",
+  pesoBruto: "",
+  largura: "",
+  altura: "",
+  comprimento: "",
+  estoqueAtual: "",
 };
 
-// ========================
-// COMPONENTE PRINCIPAL
-// ========================
+// ================= COMPONENT =================
 export default function CadastroProdutosFiscal() {
   const [form, setForm] = useState(emptyProduct);
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
 
-  // ========================
-  // LOAD PRODUTOS
-  // ========================
+  // ===== LOAD =====
   const loadProducts = async () => {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
+    const { data } = await supabase.from("products").select("*");
     setProducts(data || []);
   };
 
@@ -95,25 +72,20 @@ export default function CadastroProdutosFiscal() {
     loadProducts();
   }, []);
 
-  // ========================
-  // FILTRO
-  // ========================
+  // ===== FILTRO =====
   const filteredProducts = useMemo(() => {
     if (!search) return products;
-
-    return products.filter((p) =>
+    return products.filter(p =>
       p.nome?.toLowerCase().includes(search.toLowerCase())
     );
   }, [products, search]);
 
-  // ========================
-  // UPDATE FORM
-  // ========================
+  // ===== UPDATE =====
   const updateField = (field, value) => {
-    setForm((current) => {
-      const updated = { ...current, [field]: value };
+    setForm(prev => {
+      const updated = { ...prev, [field]: value };
 
-      if (field === "nome" && !current.sku) {
+      if (field === "nome" && !prev.sku) {
         updated.sku = gerarSKU(value);
       }
 
@@ -121,126 +93,110 @@ export default function CadastroProdutosFiscal() {
     });
   };
 
-  // ========================
-  // SALVAR
-  // ========================
+  // ===== SAVE =====
   const handleSave = async () => {
-    if (!form.nome) {
-      alert("Preencha o nome");
-      return;
-    }
-
     const payload = {
       nome: form.nome,
       sku: form.sku,
+      unidade: form.unidade,
       ncm: form.ncm,
       preco_venda: toNumber(form.precoVenda),
+      peso_liquido: toNumber(form.pesoLiquido),
+      peso_bruto: toNumber(form.pesoBruto),
+      largura: toNumber(form.largura),
+      altura: toNumber(form.altura),
+      comprimento: toNumber(form.comprimento),
+      estoque_atual: toNumber(form.estoqueAtual),
     };
 
     const { error } = await supabase.from("products").upsert([payload]);
 
     if (error) {
-      console.error(error);
       alert("Erro ao salvar");
       return;
     }
 
-    alert("Salvo com sucesso!");
-
+    alert("Produto salvo!");
     setForm(emptyProduct);
     loadProducts();
   };
 
-  // ========================
-  // CLICK PRODUTO (editar)
-  // ========================
-  const handleSelectProduct = (p) => {
+  // ===== SELECT =====
+  const handleSelect = (p) => {
     setForm({
       nome: p.nome || "",
       sku: p.sku || "",
+      unidade: p.unidade || "UN",
       ncm: p.ncm || "95059000",
       precoVenda: p.preco_venda || "",
+      pesoLiquido: p.peso_liquido || "",
+      pesoBruto: p.peso_bruto || "",
+      largura: p.largura || "",
+      altura: p.altura || "",
+      comprimento: p.comprimento || "",
+      estoqueAtual: p.estoque_atual || "",
     });
   };
 
-  // ========================
-  // UI
-  // ========================
+  // ================= UI =================
   return (
     <div className="p-6 grid grid-cols-2 gap-6">
 
-      {/* ================= FORM ================= */}
+      {/* FORM */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">Cadastro de produtos</h2>
-
           <Button onClick={handleSave}>
-            <Save size={16} />
-            Salvar
+            <Save size={16} /> Salvar
           </Button>
         </div>
 
-        <Input
-          label="Nome do produto"
-          value={form.nome}
-          onChange={(e) => updateField("nome", e.target.value)}
-        />
+        <Input label="Nome" value={form.nome} onChange={e => updateField("nome", e.target.value)} />
+        <Input label="SKU" value={form.sku} onChange={e => updateField("sku", e.target.value)} />
 
-        <Input
-          label="SKU"
-          value={form.sku}
-          onChange={(e) => updateField("sku", e.target.value)}
-        />
+        <Input label="Unidade" value={form.unidade} onChange={e => updateField("unidade", e.target.value)} />
 
-        <Input
-          label="NCM"
-          value={form.ncm}
-          onChange={(e) => updateField("ncm", e.target.value)}
-        />
+        <Input label="NCM" value={form.ncm} onChange={e => updateField("ncm", e.target.value)} />
 
-        <Input
-          label="Preço de venda"
-          value={form.precoVenda}
-          onChange={(e) => updateField("precoVenda", e.target.value)}
-        />
+        <Input label="Preço" value={form.precoVenda} onChange={e => updateField("precoVenda", e.target.value)} />
+
+        <h3 className="font-semibold mt-4">Dimensões</h3>
+
+        <Input label="Peso líquido" value={form.pesoLiquido} onChange={e => updateField("pesoLiquido", e.target.value)} />
+        <Input label="Peso bruto" value={form.pesoBruto} onChange={e => updateField("pesoBruto", e.target.value)} />
+
+        <Input label="Largura" value={form.largura} onChange={e => updateField("largura", e.target.value)} />
+        <Input label="Altura" value={form.altura} onChange={e => updateField("altura", e.target.value)} />
+        <Input label="Comprimento" value={form.comprimento} onChange={e => updateField("comprimento", e.target.value)} />
+
+        <Input label="Estoque" value={form.estoqueAtual} onChange={e => updateField("estoqueAtual", e.target.value)} />
       </div>
 
-      {/* ================= LISTA ================= */}
+      {/* LISTA */}
       <div className="space-y-4">
-
         <div className="flex items-center gap-2">
           <Search size={16} />
           <input
-            className="border rounded-lg px-3 py-2 w-full"
-            placeholder="Buscar produto..."
+            className="border px-3 py-2 rounded-lg w-full"
+            placeholder="Buscar..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
-        <div className="space-y-2">
-          {filteredProducts.map((p) => (
-            <div
-              key={p.id}
-              onClick={() => handleSelectProduct(p)}
-              className="p-4 border rounded-xl cursor-pointer hover:bg-slate-50"
-            >
-              <p className="font-semibold">{p.nome}</p>
-              <p className="text-sm text-gray-500">SKU: {p.sku}</p>
-              <p className="text-sm text-gray-500">NCM: {p.ncm}</p>
-              <p className="text-sm text-gray-500">
-                R$ {p.preco_venda}
-              </p>
-            </div>
-          ))}
-
-          {!filteredProducts.length && (
-            <div className="text-center text-gray-400 mt-6">
-              Nenhum produto encontrado
-            </div>
-          )}
-        </div>
+        {filteredProducts.map((p) => (
+          <div
+            key={p.id}
+            onClick={() => handleSelect(p)}
+            className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50"
+          >
+            <p className="font-semibold">{p.nome}</p>
+            <p className="text-sm text-gray-500">SKU: {p.sku}</p>
+            <p className="text-sm">R$ {p.preco_venda}</p>
+          </div>
+        ))}
       </div>
+
     </div>
   );
 }
