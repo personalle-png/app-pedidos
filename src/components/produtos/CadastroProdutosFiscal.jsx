@@ -129,16 +129,28 @@ export default function CadastroProdutosFiscal() {
 
   // ================= DELETE =================
   const handleDelete = async () => {
-    if (!form.sku) return;
+  if (!form.id) {
+    setMessage("Selecione um produto para excluir");
+    return;
+  }
 
-    if (!confirm("Deseja excluir este produto?")) return;
+  const confirmDelete = confirm("Deseja excluir este produto?");
+  if (!confirmDelete) return;
 
-    await supabase.from("products").delete().eq("sku", form.sku);
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", form.id);
 
-    setMessage("🗑️ Produto excluído");
-    setForm(emptyProduct);
-    setProducts([]);
-  };
+  if (error) {
+    setMessage("Erro ao excluir");
+    return;
+  }
+
+  setMessage("🗑️ Produto excluído com sucesso");
+  setForm(emptyProduct);
+  setProducts([]);
+};
 
   const handleNew = () => setForm(emptyProduct);
 
