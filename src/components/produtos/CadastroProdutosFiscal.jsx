@@ -106,7 +106,9 @@ export default function CadastroProdutosFiscal() {
 };
 
   // SAVE
-  const handleSave = async () => {
+  
+const handleSave = async () => {
+  try {
     const payload = {
       nome: form.nome,
       sku: form.sku,
@@ -130,7 +132,8 @@ export default function CadastroProdutosFiscal() {
       altura: toNumber(form.altura),
       largura: toNumber(form.largura),
     };
-const { error } = await supabase
+
+    const { error } = await supabase
       .from("products")
       .upsert([payload], { onConflict: "sku" });
 
@@ -138,11 +141,12 @@ const { error } = await supabase
 
     setMessage("✅ Produto salvo com sucesso!");
     setForm(emptyProduct);
+
   } catch (err) {
+    console.error(err);
     setMessage("❌ Erro ao salvar produto");
   }
-  };
-
+};
    
   const handleNew = () => setForm(emptyProduct);
 
