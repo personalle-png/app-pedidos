@@ -1,16 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
-import {
-  Box,
-  Barcode,
-  FileText,
-  Package,
-  Calculator,
-  Save,
-  Search,
-  Plus,
-  Trash2,
-} from "lucide-react";
 
 // ================= UTIL =================
 function gerarSKU(nome) {
@@ -46,10 +35,6 @@ const emptyProduct = {
   ncm: "95059000",
   cest: "",
   cfopPadrao: "5102",
-  cstIcms: "00",
-  csosn: "",
-  cstPis: "01",
-  cstCofins: "01",
   aliquotaIcms: "0.00",
   aliquotaPis: "0.00",
   aliquotaCofins: "0.00",
@@ -58,20 +43,17 @@ const emptyProduct = {
   estoqueAtual: "",
   estoqueMinimo: "",
   pesoLiquido: "",
-  pesoBruto: "",
-  largura: "",
   altura: "",
-  comprimento: "",
-  ativo: true,
-  observacoes: "",
+  largura: "",
 };
 
+// ================= COMPONENT =================
 export default function CadastroProdutosFiscal() {
   const [search, setSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState(emptyProduct);
 
-  // ================= LOAD =================
+  // LOAD
   const loadProducts = async () => {
     const { data } = await supabase
       .from("products")
@@ -85,25 +67,21 @@ export default function CadastroProdutosFiscal() {
     loadProducts();
   }, []);
 
-  // ================= FILTRO =================
+  // FILTRO
   const filteredProducts = useMemo(() => {
     if (!search) return products;
 
-    return products.filter((product) =>
-      [product.nome, product.sku, product.ncm]
-        .filter(Boolean)
-        .some((field) =>
-          String(field).toLowerCase().includes(search.toLowerCase())
-        )
+    return products.filter((p) =>
+      p.nome?.toLowerCase().includes(search.toLowerCase())
     );
   }, [products, search]);
 
-  // ================= UPDATE =================
+  // UPDATE
   const updateField = (field, value) => {
-    setForm((current) => {
-      const updated = { ...current, [field]: value };
+    setForm((prev) => {
+      const updated = { ...prev, [field]: value };
 
-      if (field === "nome" && !current.sku) {
+      if (field === "nome" && !prev.sku) {
         updated.sku = gerarSKU(value);
       }
 
@@ -111,170 +89,131 @@ export default function CadastroProdutosFiscal() {
     });
   };
 
-  // ================= SAVE =================
+  // SAVE
   const handleSave = async () => {
-    try {
-      const payload = {
-        nome: form.nome,
-        sku: form.sku,
-        codigo_barras: form.codigoBarras,
-        descricao: form.descricao,
-        categoria: form.categoria,
-        marca: form.marca,
-        unidade: form.unidade,
-        origem: form.origem,
-        ncm: form.ncm,
-        cest: form.cest,
-        cfop_padrao: form.cfopPadrao,
-        cst_icms: form.cstIcms,
-        csosn: form.csosn,
-        cst_pis: form.cstPis,
-        cst_cofins: form.cstCofins,
-        aliquota_icms: toNumber(form.aliquotaIcms),
-        aliquota_pis: toNumber(form.aliquotaPis),
-        aliquota_cofins: toNumber(form.aliquotaCofins),
-        preco_custo: toNumber(form.precoCusto),
-        preco_venda: toNumber(form.precoVenda),
-        estoque_atual: toNumber(form.estoqueAtual),
-        estoque_minimo: toNumber(form.estoqueMinimo),
-        peso_liquido: toNumber(form.pesoLiquido),
-        peso_bruto: toNumber(form.pesoBruto),
-        largura: toNumber(form.largura),
-        altura: toNumber(form.altura),
-        comprimento: toNumber(form.comprimento),
-        ativo: form.ativo,
-        observacoes: form.observacoes,
-      };
+    const payload = {
+      nome: form.nome,
+      sku: form.sku,
+      codigo_barras: form.codigoBarras,
+      descricao: form.descricao,
+      categoria: form.categoria,
+      marca: form.marca,
+      unidade: form.unidade,
+      origem: form.origem,
+      ncm: form.ncm,
+      cest: form.cest,
+      cfop_padrao: form.cfopPadrao,
+      aliquota_icms: toNumber(form.aliquotaIcms),
+      aliquota_pis: toNumber(form.aliquotaPis),
+      aliquota_cofins: toNumber(form.aliquotaCofins),
+      preco_custo: toNumber(form.precoCusto),
+      preco_venda: toNumber(form.precoVenda),
+      estoque_atual: toNumber(form.estoqueAtual),
+      estoque_minimo: toNumber(form.estoqueMinimo),
+      peso_liquido: toNumber(form.pesoLiquido),
+      altura: toNumber(form.altura),
+      largura: toNumber(form.largura),
+    };
 
-      const { error } = await supabase
-        .from("products")
-        .upsert([payload], { onConflict: "sku" });
+    await supabase.from("products").upsert([payload], {
+      onConflict: "sku",
+    });
 
-      if (error) throw error;
-
-      alert("Produto salvo com sucesso!");
-      loadProducts();
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao salvar produto");
-    }
+    loadProducts();
+    setForm(emptyProduct);
   };
 
   const handleNew = () => setForm(emptyProduct);
 
-  const handleSelect = (product) => {
+  const handleSelect = (p) => {
     setForm({
       ...emptyProduct,
-      ...product,
-      precoVenda: product.preco_venda,
+      ...p,
+      precoVenda: p.preco_venda,
     });
   };
 
- return (
-  <div className="p-6 grid grid-cols-2 gap-6">
+  // ================= UI =================
+  return (
+    <div className="p-6 grid grid-cols-2 gap-6">
 
-    {/* ================= LISTA ================= */}
-    <div className="bg-white border rounded-2xl p-4 space-y-4">
+      {/* LISTA */}
+      <div className="bg-white border rounded-2xl p-4 space-y-4">
+        <input
+          className="w-full border rounded-xl px-3 py-2"
+          placeholder="Buscar produto..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
 
-      <input
-        className="w-full border rounded-xl px-3 py-2"
-        placeholder="Buscar produto..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-
-      <div className="space-y-2 max-h-[500px] overflow-auto">
-        {filteredProducts.map((p) => (
-          <div
-            key={p.id}
-            onClick={() => handleSelect(p)}
-            className="p-4 border rounded-xl cursor-pointer hover:bg-slate-50"
-          >
-            <p className="font-semibold">{p.nome}</p>
-            <p className="text-xs text-gray-500">SKU: {p.sku || "-"}</p>
-            <p className="text-xs text-gray-500">NCM: {p.ncm}</p>
-            <p className="text-sm font-medium">R$ {p.preco_venda || 0}</p>
+        {filteredProducts.length === 0 ? (
+          <div className="text-center text-gray-400 py-10">
+            Nenhum produto cadastrado
           </div>
-        ))}
+        ) : (
+          filteredProducts.map((p) => (
+            <div
+              key={p.id}
+              onClick={() => handleSelect(p)}
+              className="p-4 border rounded-xl cursor-pointer hover:bg-slate-50"
+            >
+              <p className="font-semibold">{p.nome}</p>
+              <p className="text-xs text-gray-500">SKU: {p.sku}</p>
+              <p className="text-sm">R$ {p.preco_venda || 0}</p>
+            </div>
+          ))
+        )}
       </div>
 
-    </div>
+      {/* FORM */}
+      <div className="bg-white border rounded-2xl p-5 space-y-5">
 
-    {/* ================= FORM ================= */}
-    <div className="bg-white border rounded-2xl p-5 space-y-6">
+        <h2 className="font-semibold">Cadastro de produtos</h2>
 
-      <h2 className="text-lg font-semibold">Cadastro de produtos</h2>
+        <input
+          className="border rounded-xl px-3 py-2 w-full"
+          placeholder="Nome"
+          value={form.nome}
+          onChange={(e) => updateField("nome", e.target.value)}
+        />
 
-      {/* ================= GERAL ================= */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-500">Dados gerais</h3>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-xs">Nome</label>
+        <div className="grid grid-cols-2 gap-3">
           <input
             className="border rounded-xl px-3 py-2"
-            value={form.nome}
-            onChange={(e) => updateField("nome", e.target.value)}
+            placeholder="SKU"
+            value={form.sku}
+            onChange={(e) => updateField("sku", e.target.value)}
+          />
+          <input
+            className="border rounded-xl px-3 py-2"
+            placeholder="Código de barras"
+            value={form.codigoBarras}
+            onChange={(e) => updateField("codigoBarras", e.target.value)}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs">SKU</label>
-            <input
-              className="border rounded-xl px-3 py-2 w-full"
-              value={form.sku}
-              onChange={(e) => updateField("sku", e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="text-xs">Código de barras</label>
-            <input
-              className="border rounded-xl px-3 py-2 w-full"
-              value={form.codigoBarras}
-              onChange={(e) => updateField("codigoBarras", e.target.value)}
-            />
-          </div>
-        </div>
-
-        <textarea
-          className="w-full border rounded-xl px-3 py-2"
-          placeholder="Descrição"
-          value={form.descricao}
-          onChange={(e) => updateField("descricao", e.target.value)}
-        />
-      </div>
-
-      {/* ================= FISCAL ================= */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-500">Fiscal</h3>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs">NCM</label>
-            <input
-              className="border rounded-xl px-3 py-2 w-full"
-              value={form.ncm}
-              onChange={(e) => updateField("ncm", e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="text-xs">CFOP</label>
-            <input
-              className="border rounded-xl px-3 py-2 w-full"
-              value={form.cfopPadrao}
-              onChange={(e) => updateField("cfopPadrao", e.target.value)}
-            />
-          </div>
+          <input
+            className="border rounded-xl px-3 py-2"
+            placeholder="NCM"
+            value={form.ncm}
+            onChange={(e) => updateField("ncm", e.target.value)}
+          />
+          <input
+            className="border rounded-xl px-3 py-2"
+            placeholder="CFOP"
+            value={form.cfopPadrao}
+            onChange={(e) => updateField("cfopPadrao", e.target.value)}
+          />
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-500">ICMS %</label>
-            <input className="border rounded-xl px-3 py-2" ... />
-          </div>
+          <input
+            className="border rounded-xl px-3 py-2"
+            placeholder="ICMS %"
+            value={form.aliquotaIcms}
+            onChange={(e) => updateField("aliquotaIcms", e.target.value)}
+          />
           <input
             className="border rounded-xl px-3 py-2"
             placeholder="PIS %"
@@ -288,11 +227,6 @@ export default function CadastroProdutosFiscal() {
             onChange={(e) => updateField("aliquotaCofins", e.target.value)}
           />
         </div>
-      </div>
-
-      {/* ================= PREÇOS ================= */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-500">Preços</h3>
 
         <div className="grid grid-cols-2 gap-3">
           <input
@@ -308,11 +242,6 @@ export default function CadastroProdutosFiscal() {
             onChange={(e) => updateField("precoVenda", e.target.value)}
           />
         </div>
-      </div>
-
-      {/* ================= ESTOQUE ================= */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-500">Estoque</h3>
 
         <div className="grid grid-cols-2 gap-3">
           <input
@@ -328,11 +257,6 @@ export default function CadastroProdutosFiscal() {
             onChange={(e) => updateField("estoqueMinimo", e.target.value)}
           />
         </div>
-      </div>
-
-      {/* ================= DIMENSÕES ================= */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-500">Dimensões</h3>
 
         <div className="grid grid-cols-3 gap-3">
           <input
@@ -354,26 +278,24 @@ export default function CadastroProdutosFiscal() {
             onChange={(e) => updateField("largura", e.target.value)}
           />
         </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={handleSave}
+            className="bg-slate-900 text-white px-4 py-2 rounded-xl"
+          >
+            Salvar
+          </button>
+
+          <button
+            onClick={handleNew}
+            className="border px-4 py-2 rounded-xl"
+          >
+            Novo
+          </button>
+        </div>
+
       </div>
-
-      {/* BOTÕES */}
-      <div className="flex gap-2 pt-2">
-        <button
-          onClick={handleSave}
-          className="bg-slate-900 text-white px-4 py-2 rounded-xl"
-        >
-          Salvar
-        </button>
-
-        <button
-          onClick={handleNew}
-          className="border px-4 py-2 rounded-xl"
-        >
-          Novo
-        </button>
-      </div>
-
     </div>
-  </div>
-);
+  );
 }
