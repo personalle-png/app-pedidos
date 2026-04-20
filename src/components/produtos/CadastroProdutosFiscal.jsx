@@ -271,12 +271,10 @@ export default function CadastroProdutosFiscal() {
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          <input
-            className="border rounded-xl px-3 py-2"
-            placeholder="ICMS %"
-            value={form.aliquotaIcms}
-            onChange={(e) => updateField("aliquotaIcms", e.target.value)}
-          />
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-gray-500">ICMS %</label>
+            <input className="border rounded-xl px-3 py-2" ... />
+          </div>
           <input
             className="border rounded-xl px-3 py-2"
             placeholder="PIS %"
