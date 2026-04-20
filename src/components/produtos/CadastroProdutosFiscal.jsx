@@ -64,9 +64,7 @@ export default function CadastroProdutosFiscal() {
     setProducts(data || []);
   };
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  []);
 
   // FILTRO
   const filteredProducts = useMemo(() => {
@@ -89,6 +87,22 @@ export default function CadastroProdutosFiscal() {
       return updated;
     });
   };
+
+  const handleDelete = async () => {
+  if (!form.sku) return;
+
+  const confirmDelete = confirm("Deseja excluir este produto?");
+  if (!confirmDelete) return;
+
+  await supabase
+    .from("products")
+    .delete()
+    .eq("sku", form.sku);
+
+  setMessage("🗑️ Produto excluído");
+  setForm(emptyProduct);
+  setProducts([]);
+};
 
   // SAVE
   const handleSave = async () => {
@@ -154,13 +168,24 @@ export default function CadastroProdutosFiscal() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-
-        {filteredProducts.length === 0 ? (
-          <div className="text-center text-gray-400 py-10">
-            Nenhum produto cadastrado
-          </div>
-        ) : (
-          filteredProducts.map((p) => (
+        <button
+  onClick={() => {
+    loadProducts();
+    setSearched(true);
+  }}
+  className="bg-slate-900 text-white px-4 py-2 rounded-xl"
+>
+  Pesquisar
+</button>
+{!searched ? (
+  <div className="text-center text-gray-400 py-10">
+    Clique em pesquisar para carregar os produtos
+  </div>
+) : filteredProducts.length === 0 ? (
+  <div className="text-center text-gray-400 py-10">
+    Nenhum produto encontrado
+  </div>
+) :  filteredProducts.map((p) => (
             <div
               key={p.id}
               onClick={() => handleSelect(p)}
@@ -174,6 +199,12 @@ export default function CadastroProdutosFiscal() {
         )}
       </div>
 
+      {message && (
+  <div className="text-sm bg-green-100 text-green-700 p-2 rounded-xl">
+    {message}
+  </div>
+)}
+      
       {/* FORM */}
      <div className="bg-white border rounded-2xl p-5 space-y-5">
 
@@ -354,6 +385,13 @@ export default function CadastroProdutosFiscal() {
     >
       Salvar
     </button>
+
+    <button
+  onClick={handleDelete}
+  className="bg-red-500 text-white px-4 py-2 rounded-xl"
+>
+  Excluir
+</button>
 
     <button
       onClick={handleNew}
