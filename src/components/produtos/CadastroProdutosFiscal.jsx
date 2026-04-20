@@ -148,6 +148,7 @@ export default function CadastroProdutosFiscal() {
   }
 
   setMessage("🗑️ Produto excluído com sucesso");
+  loadProducts();  
   setForm(emptyProduct);
   setProducts([]);
 };
