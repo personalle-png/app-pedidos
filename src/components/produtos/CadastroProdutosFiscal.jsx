@@ -170,12 +170,15 @@ export default function CadastroProdutosFiscal() {
 
         <h2 className="font-semibold">Cadastro de produtos</h2>
 
-        <input
-          className="border rounded-xl px-3 py-2 w-full"
-          placeholder="Nome"
-          value={form.nome}
-          onChange={(e) => updateField("nome", e.target.value)}
-        />
+        <div className="flex flex-col gap-1">
+  <label className="text-xs text-gray-500">Nome do produto</label>
+  <input
+    className="border rounded-xl px-3 py-2"
+    value={form.nome}
+    onChange={(e) => updateField("nome", e.target.value)}
+    autoFocus
+  />
+</div>
 
         <div className="grid grid-cols-2 gap-3">
           <input
@@ -259,25 +262,35 @@ export default function CadastroProdutosFiscal() {
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          <input
-            className="border rounded-xl px-3 py-2"
-            placeholder="Peso"
-            value={form.pesoLiquido}
-            onChange={(e) => updateField("pesoLiquido", e.target.value)}
-          />
-          <input
-            className="border rounded-xl px-3 py-2"
-            placeholder="Altura"
-            value={form.altura}
-            onChange={(e) => updateField("altura", e.target.value)}
-          />
-          <input
-            className="border rounded-xl px-3 py-2"
-            placeholder="Largura"
-            value={form.largura}
-            onChange={(e) => updateField("largura", e.target.value)}
-          />
-        </div>
+
+  <div className="flex flex-col gap-1">
+    <label className="text-xs text-gray-500">Peso (kg)</label>
+    <input
+      className="border rounded-xl px-3 py-2"
+      value={form.pesoLiquido}
+      onChange={(e) => updateField("pesoLiquido", e.target.value)}
+    />
+  </div>
+
+  <div className="flex flex-col gap-1">
+    <label className="text-xs text-gray-500">Altura (cm)</label>
+    <input
+      className="border rounded-xl px-3 py-2"
+      value={form.altura}
+      onChange={(e) => updateField("altura", e.target.value)}
+    />
+  </div>
+
+  <div className="flex flex-col gap-1">
+    <label className="text-xs text-gray-500">Largura (cm)</label>
+    <input
+      className="border rounded-xl px-3 py-2"
+      value={form.largura}
+      onChange={(e) => updateField("largura", e.target.value)}
+    />
+  </div>
+
+</div>
 
         <div className="flex gap-2">
           <button
