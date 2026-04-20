@@ -130,8 +130,7 @@ export default function CadastroProdutosFiscal() {
       altura: toNumber(form.altura),
       largura: toNumber(form.largura),
     };
-
-    const { error } = await supabase
+const { error } = await supabase
       .from("products")
       .upsert([payload], { onConflict: "sku" });
 
@@ -142,6 +141,7 @@ export default function CadastroProdutosFiscal() {
   } catch (err) {
     setMessage("❌ Erro ao salvar produto");
   }
+  };
 
    
   const handleNew = () => setForm(emptyProduct);
