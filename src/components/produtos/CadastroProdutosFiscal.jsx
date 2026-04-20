@@ -115,9 +115,17 @@ export default function CadastroProdutosFiscal() {
       largura: toNumber(form.largura),
     };
 
-    await supabase.from("products").upsert([payload], {
-      onConflict: "sku",
-    });
+    const { error } = await supabase
+      .from("products")
+      .upsert([payload], { onConflict: "sku" });
+
+    if (error) throw error;
+
+    setMessage("✅ Produto salvo com sucesso!");
+    setForm(emptyProduct);
+  } catch (err) {
+    setMessage("❌ Erro ao salvar produto");
+  }
 
     loadProducts();
     setForm(emptyProduct);
