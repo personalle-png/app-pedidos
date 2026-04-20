@@ -173,8 +173,9 @@ export default function CadastroProdutosFiscal() {
  return (
   <div className="p-6 grid grid-cols-2 gap-6">
 
-    {/* LISTA */}
-    <div className="space-y-4">
+    {/* ================= LISTA ================= */}
+    <div className="bg-white border rounded-2xl p-4 space-y-4">
+
       <input
         className="w-full border rounded-xl px-3 py-2"
         placeholder="Buscar produto..."
@@ -182,189 +183,199 @@ export default function CadastroProdutosFiscal() {
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      {filteredProducts.map((p) => (
-        <div
-          key={p.id}
-          onClick={() => handleSelect(p)}
-          className="p-4 border rounded-xl bg-white cursor-pointer hover:bg-slate-50"
-        >
-          <p className="font-semibold">{p.nome}</p>
-          <p className="text-sm text-gray-500">SKU: {p.sku}</p>
-          <p className="text-sm">R$ {p.preco_venda}</p>
+      <div className="space-y-2 max-h-[500px] overflow-auto">
+        {filteredProducts.map((p) => (
+          <div
+            key={p.id}
+            onClick={() => handleSelect(p)}
+            className="p-4 border rounded-xl cursor-pointer hover:bg-slate-50"
+          >
+            <p className="font-semibold">{p.nome}</p>
+            <p className="text-xs text-gray-500">SKU: {p.sku || "-"}</p>
+            <p className="text-xs text-gray-500">NCM: {p.ncm}</p>
+            <p className="text-sm font-medium">R$ {p.preco_venda || 0}</p>
+          </div>
+        ))}
+      </div>
+
+    </div>
+
+    {/* ================= FORM ================= */}
+    <div className="bg-white border rounded-2xl p-5 space-y-6">
+
+      <h2 className="text-lg font-semibold">Cadastro de produtos</h2>
+
+      {/* ================= GERAL ================= */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-gray-500">Dados gerais</h3>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs">Nome</label>
+          <input
+            className="border rounded-xl px-3 py-2"
+            value={form.nome}
+            onChange={(e) => updateField("nome", e.target.value)}
+          />
         </div>
-      ))}
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs">SKU</label>
+            <input
+              className="border rounded-xl px-3 py-2 w-full"
+              value={form.sku}
+              onChange={(e) => updateField("sku", e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="text-xs">Código de barras</label>
+            <input
+              className="border rounded-xl px-3 py-2 w-full"
+              value={form.codigoBarras}
+              onChange={(e) => updateField("codigoBarras", e.target.value)}
+            />
+          </div>
+        </div>
+
+        <textarea
+          className="w-full border rounded-xl px-3 py-2"
+          placeholder="Descrição"
+          value={form.descricao}
+          onChange={(e) => updateField("descricao", e.target.value)}
+        />
+      </div>
+
+      {/* ================= FISCAL ================= */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-gray-500">Fiscal</h3>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs">NCM</label>
+            <input
+              className="border rounded-xl px-3 py-2 w-full"
+              value={form.ncm}
+              onChange={(e) => updateField("ncm", e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="text-xs">CFOP</label>
+            <input
+              className="border rounded-xl px-3 py-2 w-full"
+              value={form.cfopPadrao}
+              onChange={(e) => updateField("cfopPadrao", e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <input
+            className="border rounded-xl px-3 py-2"
+            placeholder="ICMS %"
+            value={form.aliquotaIcms}
+            onChange={(e) => updateField("aliquotaIcms", e.target.value)}
+          />
+          <input
+            className="border rounded-xl px-3 py-2"
+            placeholder="PIS %"
+            value={form.aliquotaPis}
+            onChange={(e) => updateField("aliquotaPis", e.target.value)}
+          />
+          <input
+            className="border rounded-xl px-3 py-2"
+            placeholder="COFINS %"
+            value={form.aliquotaCofins}
+            onChange={(e) => updateField("aliquotaCofins", e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* ================= PREÇOS ================= */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-gray-500">Preços</h3>
+
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            className="border rounded-xl px-3 py-2"
+            placeholder="Preço custo"
+            value={form.precoCusto}
+            onChange={(e) => updateField("precoCusto", e.target.value)}
+          />
+          <input
+            className="border rounded-xl px-3 py-2"
+            placeholder="Preço venda"
+            value={form.precoVenda}
+            onChange={(e) => updateField("precoVenda", e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* ================= ESTOQUE ================= */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-gray-500">Estoque</h3>
+
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            className="border rounded-xl px-3 py-2"
+            placeholder="Estoque atual"
+            value={form.estoqueAtual}
+            onChange={(e) => updateField("estoqueAtual", e.target.value)}
+          />
+          <input
+            className="border rounded-xl px-3 py-2"
+            placeholder="Estoque mínimo"
+            value={form.estoqueMinimo}
+            onChange={(e) => updateField("estoqueMinimo", e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* ================= DIMENSÕES ================= */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-gray-500">Dimensões</h3>
+
+        <div className="grid grid-cols-3 gap-3">
+          <input
+            className="border rounded-xl px-3 py-2"
+            placeholder="Peso"
+            value={form.pesoLiquido}
+            onChange={(e) => updateField("pesoLiquido", e.target.value)}
+          />
+          <input
+            className="border rounded-xl px-3 py-2"
+            placeholder="Altura"
+            value={form.altura}
+            onChange={(e) => updateField("altura", e.target.value)}
+          />
+          <input
+            className="border rounded-xl px-3 py-2"
+            placeholder="Largura"
+            value={form.largura}
+            onChange={(e) => updateField("largura", e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* BOTÕES */}
+      <div className="flex gap-2 pt-2">
+        <button
+          onClick={handleSave}
+          className="bg-slate-900 text-white px-4 py-2 rounded-xl"
+        >
+          Salvar
+        </button>
+
+        <button
+          onClick={handleNew}
+          className="border px-4 py-2 rounded-xl"
+        >
+          Novo
+        </button>
+      </div>
+
     </div>
-<div className="space-y-6 bg-white border rounded-2xl p-4">
-   <div className="space-y-6">
-
-  <h2 className="text-lg font-semibold">Cadastro de produtos</h2>
-
-  {/* ================= DADOS GERAIS ================= */}
-  <div className="space-y-3">
-    <h3 className="text-sm font-semibold text-gray-500">Dados gerais</h3>
-
-    <input
-      className="w-full border rounded-xl px-3 py-2"
-      placeholder="Nome do produto"
-      value={form.nome}
-      onChange={(e) => updateField("nome", e.target.value)}
-    />
-
-    <div className="grid grid-cols-2 gap-3">
-      <input
-        className="border rounded-xl px-3 py-2"
-        placeholder="SKU"
-        value={form.sku}
-        onChange={(e) => updateField("sku", e.target.value)}
-      />
-
-      <input
-        className="border rounded-xl px-3 py-2"
-        placeholder="Código de barras"
-        value={form.codigoBarras}
-        onChange={(e) => updateField("codigoBarras", e.target.value)}
-      />
-    </div>
-
-    <textarea
-      className="w-full border rounded-xl px-3 py-2"
-      placeholder="Descrição"
-      value={form.descricao}
-      onChange={(e) => updateField("descricao", e.target.value)}
-    />
   </div>
-
-  {/* ================= FISCAL ================= */}
-  <div className="space-y-3">
-    <h3 className="text-sm font-semibold text-gray-500">Fiscal</h3>
-
-    <div className="grid grid-cols-2 gap-3">
-      <input
-        className="border rounded-xl px-3 py-2"
-        placeholder="NCM"
-        value={form.ncm}
-        onChange={(e) => updateField("ncm", e.target.value)}
-      />
-
-      <input
-        className="border rounded-xl px-3 py-2"
-        placeholder="CFOP"
-        value={form.cfopPadrao}
-        onChange={(e) => updateField("cfopPadrao", e.target.value)}
-      />
-    </div>
-
-    <div className="grid grid-cols-3 gap-3">
-      <input
-        className="border rounded-xl px-3 py-2"
-        placeholder="ICMS %"
-        value={form.aliquotaIcms}
-        onChange={(e) => updateField("aliquotaIcms", e.target.value)}
-      />
-
-      <input
-        className="border rounded-xl px-3 py-2"
-        placeholder="PIS %"
-        value={form.aliquotaPis}
-        onChange={(e) => updateField("aliquotaPis", e.target.value)}
-      />
-
-      <input
-        className="border rounded-xl px-3 py-2"
-        placeholder="COFINS %"
-        value={form.aliquotaCofins}
-        onChange={(e) => updateField("aliquotaCofins", e.target.value)}
-      />
-    </div>
-  </div>
-
-  {/* ================= PREÇO ================= */}
-  <div className="space-y-3">
-    <h3 className="text-sm font-semibold text-gray-500">Preços</h3>
-
-    <div className="grid grid-cols-2 gap-3">
-      <input
-        className="border rounded-xl px-3 py-2"
-        placeholder="Preço custo"
-        value={form.precoCusto}
-        onChange={(e) => updateField("precoCusto", e.target.value)}
-      />
-
-      <input
-        className="border rounded-xl px-3 py-2"
-        placeholder="Preço venda"
-        value={form.precoVenda}
-        onChange={(e) => updateField("precoVenda", e.target.value)}
-      />
-    </div>
-  </div>
-
-  {/* ================= ESTOQUE ================= */}
-  <div className="space-y-3">
-    <h3 className="text-sm font-semibold text-gray-500">Estoque</h3>
-
-    <div className="grid grid-cols-2 gap-3">
-      <input
-        className="border rounded-xl px-3 py-2"
-        placeholder="Estoque atual"
-        value={form.estoqueAtual}
-        onChange={(e) => updateField("estoqueAtual", e.target.value)}
-      />
-
-      <input
-        className="border rounded-xl px-3 py-2"
-        placeholder="Estoque mínimo"
-        value={form.estoqueMinimo}
-        onChange={(e) => updateField("estoqueMinimo", e.target.value)}
-      />
-    </div>
-  </div>
-
-  {/* ================= DIMENSÕES ================= */}
-  <div className="space-y-3">
-    <h3 className="text-sm font-semibold text-gray-500">Dimensões</h3>
-
-    <div className="grid grid-cols-3 gap-3">
-      <input
-        className="border rounded-xl px-3 py-2"
-        placeholder="Peso"
-        value={form.pesoLiquido}
-        onChange={(e) => updateField("pesoLiquido", e.target.value)}
-      />
-
-      <input
-        className="border rounded-xl px-3 py-2"
-        placeholder="Altura"
-        value={form.altura}
-        onChange={(e) => updateField("altura", e.target.value)}
-      />
-
-      <input
-        className="border rounded-xl px-3 py-2"
-        placeholder="Largura"
-        value={form.largura}
-        onChange={(e) => updateField("largura", e.target.value)}
-      />
-    </div>
-  </div>
-
-  {/* BOTÕES */}
-  <div className="flex gap-2 pt-2">
-    <button
-      onClick={handleSave}
-      className="bg-slate-900 text-white px-4 py-2 rounded-xl"
-    >
-      Salvar
-    </button>
-
-    <button
-      onClick={handleNew}
-      className="border px-4 py-2 rounded-xl"
-    >
-      Novo
-    </button>
-  </div>
-
-</div>
 );
 }
