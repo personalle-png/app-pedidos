@@ -194,7 +194,7 @@ export default function CadastroProdutosFiscal() {
         </div>
       ))}
     </div>
-
+<div className="space-y-6 bg-white border rounded-2xl p-4">
    <div className="space-y-6">
 
   <h2 className="text-lg font-semibold">Cadastro de produtos</h2>
