@@ -170,56 +170,83 @@ export default function CadastroProdutosFiscal() {
     });
   };
 
-  return (
-    <div className="p-6 grid grid-cols-2 gap-6">
+ return (
+  <div className="p-6 grid grid-cols-2 gap-6">
 
-      {/* LISTA */}
-      <div>
+    {/* LISTA */}
+    <div className="space-y-4">
+      <input
+        className="w-full border rounded-xl px-3 py-2"
+        placeholder="Buscar produto..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      {filteredProducts.map((p) => (
+        <div
+          key={p.id}
+          onClick={() => handleSelect(p)}
+          className="p-4 border rounded-xl bg-white cursor-pointer hover:bg-slate-50"
+        >
+          <p className="font-semibold">{p.nome}</p>
+          <p className="text-sm text-gray-500">SKU: {p.sku}</p>
+          <p className="text-sm">R$ {p.preco_venda}</p>
+        </div>
+      ))}
+    </div>
+
+    {/* FORM */}
+    <div className="space-y-4">
+
+      <h2 className="text-lg font-semibold">Cadastro de produtos</h2>
+
+      <div className="grid grid-cols-2 gap-4">
         <input
-          placeholder="Buscar produto..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-
-        {filteredProducts.map((p) => (
-          <div key={p.id} onClick={() => handleSelect(p)}>
-            {p.nome}
-          </div>
-        ))}
-      </div>
-
-      {/* FORM */}
-      <div>
-        <h2>Cadastro de produtos</h2>
-
-        <input
+          className="border rounded-xl px-3 py-2"
           placeholder="Nome"
           value={form.nome}
           onChange={(e) => updateField("nome", e.target.value)}
         />
 
         <input
+          className="border rounded-xl px-3 py-2"
           placeholder="SKU"
           value={form.sku}
           onChange={(e) => updateField("sku", e.target.value)}
         />
 
         <input
+          className="border rounded-xl px-3 py-2"
           placeholder="NCM"
           value={form.ncm}
           onChange={(e) => updateField("ncm", e.target.value)}
         />
 
         <input
+          className="border rounded-xl px-3 py-2"
           placeholder="Preço"
           value={form.precoVenda}
           onChange={(e) => updateField("precoVenda", e.target.value)}
         />
+      </div>
 
-        <button onClick={handleSave}>Salvar</button>
-        <button onClick={handleNew}>Novo</button>
+      <div className="flex gap-2">
+        <button
+          onClick={handleSave}
+          className="bg-slate-900 text-white px-4 py-2 rounded-xl"
+        >
+          Salvar
+        </button>
+
+        <button
+          onClick={handleNew}
+          className="border px-4 py-2 rounded-xl"
+        >
+          Novo
+        </button>
       </div>
 
     </div>
-  );
+  </div>
+);
 }
