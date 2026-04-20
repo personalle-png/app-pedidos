@@ -63,8 +63,9 @@ export default function CadastroProdutosFiscal() {
 
     setProducts(data || []);
   };
+}
 
-  []);
+  
 
   // FILTRO
   const filteredProducts = useMemo(() => {
