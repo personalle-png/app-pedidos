@@ -198,8 +198,8 @@ const handleSave = async () => {
               <p className="text-sm">R$ {p.preco_venda || 0}</p>
             </div>
           ))
-        )}
       </div>
+}
 
       {message && (
   <div className="text-sm bg-green-100 text-green-700 p-2 rounded-xl">
