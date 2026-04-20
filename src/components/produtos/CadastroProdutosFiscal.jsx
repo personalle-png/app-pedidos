@@ -200,75 +200,203 @@ export default function CadastroProdutosFiscal() {
       {/* FORM */}
       <div className="bg-white border rounded-2xl p-5 space-y-5">
 
-        {message && (
-          <div className="text-sm bg-green-100 text-green-700 p-2 rounded-xl">
-            {message}
-          </div>
-        )}
+  {message && (
+    <div className="text-sm bg-green-100 text-green-700 p-2 rounded-xl">
+      {message}
+    </div>
+  )}
 
-        <h2 className="font-semibold">Cadastro de produtos</h2>
+  <h2 className="font-semibold">Cadastro de produtos</h2>
 
-        <input
-          className="border rounded-xl px-3 py-2 w-full"
-          placeholder="Nome"
-          value={form.nome}
-          onChange={(e) => updateField("nome", e.target.value)}
-        />
+  {/* NOME */}
+  <div className="flex flex-col gap-1">
+    <label className="text-xs text-gray-500">Nome do produto</label>
+    <input
+      className="border rounded-xl px-3 py-2"
+      value={form.nome}
+      onChange={(e) => updateField("nome", e.target.value)}
+    />
+  </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            className="border rounded-xl px-3 py-2"
-            placeholder="SKU"
-            value={form.sku}
-            onChange={(e) => updateField("sku", e.target.value)}
-          />
-          <input
-            className="border rounded-xl px-3 py-2"
-            placeholder="Código de barras"
-            value={form.codigoBarras}
-            onChange={(e) => updateField("codigoBarras", e.target.value)}
-          />
-        </div>
+  {/* SKU + CODIGO */}
+  <div className="grid grid-cols-2 gap-3">
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">SKU</label>
+      <input
+        className="border rounded-xl px-3 py-2"
+        value={form.sku}
+        onChange={(e) => updateField("sku", e.target.value)}
+      />
+    </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            className="border rounded-xl px-3 py-2"
-            placeholder="NCM"
-            value={form.ncm}
-            onChange={(e) => updateField("ncm", e.target.value)}
-          />
-          <input
-            className="border rounded-xl px-3 py-2"
-            placeholder="CFOP"
-            value={form.cfopPadrao}
-            onChange={(e) => updateField("cfopPadrao", e.target.value)}
-          />
-        </div>
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">Código de barras</label>
+      <input
+        className="border rounded-xl px-3 py-2"
+        value={form.codigoBarras}
+        onChange={(e) => updateField("codigoBarras", e.target.value)}
+      />
+    </div>
+  </div>
 
-        <div className="flex gap-2">
-          <button
-            onClick={handleSave}
-            className="bg-slate-900 text-white px-4 py-2 rounded-xl"
-          >
-            Salvar
-          </button>
+  {/* DESCRIÇÃO */}
+  <div className="flex flex-col gap-1">
+    <label className="text-xs text-gray-500">Descrição</label>
+    <textarea
+      className="border rounded-xl px-3 py-2"
+      value={form.descricao}
+      onChange={(e) => updateField("descricao", e.target.value)}
+    />
+  </div>
 
-          <button
-            onClick={handleDelete}
-            className="bg-red-500 text-white px-4 py-2 rounded-xl"
-          >
-            Excluir
-          </button>
+  {/* FISCAL */}
+  <div className="grid grid-cols-2 gap-3">
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">NCM</label>
+      <input
+        className="border rounded-xl px-3 py-2"
+        value={form.ncm}
+        onChange={(e) => updateField("ncm", e.target.value)}
+      />
+    </div>
 
-          <button
-            onClick={handleNew}
-            className="border px-4 py-2 rounded-xl"
-          >
-            Novo
-          </button>
-        </div>
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">CFOP</label>
+      <input
+        className="border rounded-xl px-3 py-2"
+        value={form.cfopPadrao}
+        onChange={(e) => updateField("cfopPadrao", e.target.value)}
+      />
+    </div>
+  </div>
 
-      </div>
+  {/* IMPOSTOS */}
+  <div className="grid grid-cols-3 gap-3">
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">ICMS %</label>
+      <input
+        className="border rounded-xl px-3 py-2"
+        value={form.aliquotaIcms}
+        onChange={(e) => updateField("aliquotaIcms", e.target.value)}
+      />
+    </div>
+
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">PIS %</label>
+      <input
+        className="border rounded-xl px-3 py-2"
+        value={form.aliquotaPis}
+        onChange={(e) => updateField("aliquotaPis", e.target.value)}
+      />
+    </div>
+
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">COFINS %</label>
+      <input
+        className="border rounded-xl px-3 py-2"
+        value={form.aliquotaCofins}
+        onChange={(e) => updateField("aliquotaCofins", e.target.value)}
+      />
+    </div>
+  </div>
+
+  {/* PREÇOS */}
+  <div className="grid grid-cols-2 gap-3">
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">Preço custo</label>
+      <input
+        className="border rounded-xl px-3 py-2"
+        value={form.precoCusto}
+        onChange={(e) => updateField("precoCusto", e.target.value)}
+      />
+    </div>
+
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">Preço venda</label>
+      <input
+        className="border rounded-xl px-3 py-2"
+        value={form.precoVenda}
+        onChange={(e) => updateField("precoVenda", e.target.value)}
+      />
+    </div>
+  </div>
+
+  {/* ESTOQUE */}
+  <div className="grid grid-cols-2 gap-3">
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">Estoque atual</label>
+      <input
+        className="border rounded-xl px-3 py-2"
+        value={form.estoqueAtual}
+        onChange={(e) => updateField("estoqueAtual", e.target.value)}
+      />
+    </div>
+
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">Estoque mínimo</label>
+      <input
+        className="border rounded-xl px-3 py-2"
+        value={form.estoqueMinimo}
+        onChange={(e) => updateField("estoqueMinimo", e.target.value)}
+      />
+    </div>
+  </div>
+
+  {/* DIMENSÕES */}
+  <div className="grid grid-cols-3 gap-3">
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">Peso (kg)</label>
+      <input
+        className="border rounded-xl px-3 py-2"
+        value={form.pesoLiquido}
+        onChange={(e) => updateField("pesoLiquido", e.target.value)}
+      />
+    </div>
+
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">Altura (cm)</label>
+      <input
+        className="border rounded-xl px-3 py-2"
+        value={form.altura}
+        onChange={(e) => updateField("altura", e.target.value)}
+      />
+    </div>
+
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">Largura (cm)</label>
+      <input
+        className="border rounded-xl px-3 py-2"
+        value={form.largura}
+        onChange={(e) => updateField("largura", e.target.value)}
+      />
+    </div>
+  </div>
+
+  {/* BOTÕES */}
+  <div className="flex gap-2 pt-2">
+    <button
+      onClick={handleSave}
+      className="bg-slate-900 text-white px-4 py-2 rounded-xl"
+    >
+      Salvar
+    </button>
+
+    <button
+      onClick={handleDelete}
+      className="bg-red-500 text-white px-4 py-2 rounded-xl"
+    >
+      Excluir
+    </button>
+
+    <button
+      onClick={handleNew}
+      className="border px-4 py-2 rounded-xl"
+    >
+      Novo
+    </button>
+  </div>
+
+</div>
     </div>
   );
 }
