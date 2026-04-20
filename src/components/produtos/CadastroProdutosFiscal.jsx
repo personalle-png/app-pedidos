@@ -143,10 +143,7 @@ export default function CadastroProdutosFiscal() {
     setMessage("❌ Erro ao salvar produto");
   }
 
-    loadProducts();
-    setForm(emptyProduct);
-  };
-
+   
   const handleNew = () => setForm(emptyProduct);
 
   const handleSelect = (p) => {
