@@ -356,9 +356,6 @@ export default function CadastroProdutosFiscal() {
 
 </div>
 
-     
 
-      </div>
-    </div>
   );
 }
