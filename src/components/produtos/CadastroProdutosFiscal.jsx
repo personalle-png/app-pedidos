@@ -52,6 +52,7 @@ export default function CadastroProdutosFiscal() {
   const [search, setSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState(emptyProduct);
+  const [message, setMessage] = useState("");
 
   // LOAD
   const loadProducts = async () => {
